@@ -1,0 +1,130 @@
+# Arduino & ESP32 Build Artifacts
+build/
+*.o
+*.a
+*.so
+.pio/
+.pio/**
+
+# Arduino IDE
+.vscode/
+.ino.cpp
+.ino.cpp.d
+
+# MicroPython Build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# AWS Credentials (NEVER commit these!)
+**/aws-credentials.json
+**/aws-config.ini
+**.env**
+.env
+.env.local
+credentials.json
+aws_certs/
+**/certificates/
+**/private-key.pem
+**/certificate.pem
+**/root-CA.crt
+
+# Secrets
+.secrets
+secrets.txt
+*.key
+*.pem
+*.crt
+
+# Test Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+*.cover
+
+# Hardware Debugging Logs
+*.log
+logs/
+debug.log
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*.backup
+~$*
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Large Binary Files
+*.bin
+*.hex
+*.elf
+*.firmware
+
+# Generated Documentation
+site/
+build/
+dist/
+
+# Documentation Build
+.mkdocs/
+
+# Node modules (if using web dashboard)
+node_modules/
+npm-debug.log
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Data Files (Optional - keep small sample data, ignore large logs)
+data/*.csv
+logs/*.txt
+!**/sample-*.csv
+!**/example-*.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+.obsidian/
