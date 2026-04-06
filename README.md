@@ -116,11 +116,11 @@ Edit `README.md` with your student details:
 ```markdown
 # Industrial IoT Portfolio – [YOUR NAME]
 
-**Student:** [Your Name]  
-**Student ID:** [Your ID]  
-**Cohort:** [Date range, e.g., Feb 2024 – Jul 2024]  
+**Student:** [Tony Bui]  
+**Student ID:** [20115515]  
+**Cohort:** [July 2023 - Feb 2026]  
 **Course:** Diploma of Information Technology – Internet of Things  
-**Institution:** [Your TAFE/College]  
+**Institution:** [North Metropolitan Tafe]  
 ```
 
 ### 4. Add Your Code

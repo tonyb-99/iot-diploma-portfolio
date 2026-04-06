@@ -134,7 +134,8 @@ Confirm all requirements completed before submitting:
 ## Optional Notes
 
 [Add any additional context: platform choice, optional features added, challenges encountered, etc.]
-
+Table ref: https://ntcsensors.com/10k_Type_3_Thermistor_Table/
+Code ref: https://wokwi.com/projects/299330254810382858 
 ---
 
 ## Submission Declaration
