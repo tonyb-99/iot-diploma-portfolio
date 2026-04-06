@@ -1,0 +1,52 @@
+#ifndef TEMPERATURE_SENSOR_H
+#define TEMPERATURE_SENSOR_H
+
+#include <Arduino.h>
+
+#define BETA 3950.
+#define KLVN 273.15
+#define ANALOG_MAX 4095.
+#define ROOM_TEMP 25.0
+
+typedef enum { 
+  NONE, 
+  GREEN, 
+  YELLOW, 
+  RED
+  } ColourCode;
+
+extern ColourCode currentColour;
+
+// Temperature tolerance for humans 
+// https://pmc.ncbi.nlm.nih.gov/articles/PMC10687011/
+// https://calc2chart.com/temperature-body-chart/
+typedef enum { 
+  COLDEST = -11, 
+  COLDER = -10, 
+  COLD = 10, 
+  SAFE = 25, 
+  WARM = 37, 
+  HOT = 43, 
+  HOTTEST = 44
+  } Conditions;
+
+extern Conditions currentCondition;
+
+void initRGB(uint8_t redPin, uint8_t greenPin, uint8_t bluePin);
+void rgbOFF(uint8_t redPin, uint8_t greenPin, uint8_t bluePin);
+void redON(uint8_t redPin, float intensity = 1.0f);
+void greenON(uint8_t greenPin, float intensity = 1.0);
+void yellowON(uint8_t redPin, uint8_t greenPin, float intensity = 1.0f);
+void blueON(uint8_t bluePin, float intensity = 1.0f);
+
+void initThermistor(uint8_t thermistorPin);
+float getTemperature(uint8_t thermistorPin);
+
+
+#endif
+
+
+
+
+
+
