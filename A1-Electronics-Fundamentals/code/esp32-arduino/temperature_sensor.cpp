@@ -67,6 +67,22 @@ float getTemperature(uint8_t thermistorPin)
   return celsius;
 }
 
+ColourCode getTemperatureColour(float temperature)
+{
+  // Check dangers first before approaching safety
+  // Danger if below -10 or above 43 C
+  if(temperature < Conditions::FREEZING || temperature > Conditions::HOT)
+  {
+    return ColourCode::RED;
+  }
+  // Warning if below 10 or above 37 C
+  if(temperature < Conditions::COLD || temperature > Conditions::WARM)
+  {
+    return ColourCode::YELLOW;
+  }
+
+  return ColourCode::GREEN;
+}
 
 
 

@@ -15,22 +15,16 @@ typedef enum {
   RED
   } ColourCode;
 
-extern ColourCode currentColour;
-
 // Temperature tolerance for humans 
 // https://pmc.ncbi.nlm.nih.gov/articles/PMC10687011/
 // https://calc2chart.com/temperature-body-chart/
 typedef enum { 
-  COLDEST = -11, 
-  COLDER = -10, 
+  FREEZING = -10, 
   COLD = 10, 
   SAFE = 25, 
   WARM = 37, 
   HOT = 43, 
-  HOTTEST = 44
   } Conditions;
-
-extern Conditions currentCondition;
 
 void initRGB(uint8_t redPin, uint8_t greenPin, uint8_t bluePin);
 void rgbOFF(uint8_t redPin, uint8_t greenPin, uint8_t bluePin);
@@ -41,6 +35,7 @@ void blueON(uint8_t bluePin, float intensity = 1.0f);
 
 void initThermistor(uint8_t thermistorPin);
 float getTemperature(uint8_t thermistorPin);
+ColourCode getTemperatureColour(float temperature);
 
 
 #endif
