@@ -9,12 +9,14 @@
 float avgTemperature = 0.0f;
 unsigned long currentTime = 0;
 unsigned long prevTime = 0;
-const long interval = 25000;
+unsigned long tick = 0;
+unsigned long lastTick = -1;
 ColourCode currentColour = ColourCode::NONE;
 bool isRed = false;
 bool isGreen = false;
 bool isYellow = false;
-uint8_t counter = 0;
+bool isLED_ON = false;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -26,68 +28,105 @@ void setup() {
 
 void loop() {
   currentTime = millis();
-  // Determine colour state immediately within the first 5 seconds
-  if(currentColour == ColourCode::NONE)
+  // New time variable where a tick is 100ms. 
+  if(currentTime - prevTime >= 100)
   {
-    if(currentTime - prevTime >= 1000)
+    prevTime = currentTime;
+    tick++;
+  }
+
+  // Execute once per tick 
+  if(tick != lastTick)
+  {
+    lastTick = tick;
+
+    if(tick % 10 == 0)
     {
-      prevTime = currentTime;
-      avgTemperature += getTemperature(THERM_PIN);
-      int counter = prevTime / 1000;
-      if(counter > 1)
-      { 
+      Serial.print("Time: ");
+      Serial.print(tick / 10);
+      Serial.print(" s\n");
+    }
+
+    // Determine colour state immediately within the first 5 seconds
+    if(tick % 10 == 0 && currentColour == ColourCode::NONE)
+    {
+        avgTemperature += getTemperature(THERM_PIN);
+
+        if(tick != 0 && tick % 10 == 0)
+        { 
+          avgTemperature /= 2.0f;
+        }
+
+        if(tick >= 50)
+        {
+          LED_Temperature();
+        }
+      
+    }
+
+    // After the initial 5 seconds and contains a colour code
+    if(currentColour != ColourCode::NONE)
+    {
+      // Determine the avg temperature and colour every 5 seconds.
+      if(tick % 50 == 0)
+      {
+        avgTemperature += getTemperature(THERM_PIN);
         avgTemperature /= 2.0f;
+        LED_Temperature();
+      }
+
+      // Green LED pulse longer (Flicker every 3 sec)
+      if(currentColour == ColourCode::GREEN && tick % 30 == 0)
+      {
+        isLED_ON = !isLED_ON;
+        //prevTime = currentTime;
+        if(isGreen && isLED_ON)
+        {
+          G_LED();
+          isGreen = false;
+        }
+        
+        if(!isGreen && !isLED_ON)
+        {
+          RGBOFF();
+          isGreen = true;
+        }
+      }
+      // Yellow LED pulse shorter (Flicker every 1.5 sec)
+      if(currentColour == ColourCode::YELLOW && tick % 15 == 0)
+      {
+        isLED_ON = !isLED_ON;
+        if(isYellow && isLED_ON)
+        {
+          Y_LED();
+          isYellow = false;
+        }
+        
+        if(!isYellow && !isLED_ON)
+        {
+          RGBOFF();
+          isYellow = true;
+        }
+      }
+
+      // Red LED pulse quickly (Flicker every 0.5 sec)
+      if(currentColour == ColourCode::RED && tick % 5 == 0)
+      {
+        isLED_ON = !isLED_ON;
+        if(isRed && isLED_ON)
+        {
+          R_LED();
+          isRed = false;
+        }
+        
+        if(!isRed && !isLED_ON)
+        {
+          RGBOFF();
+          isRed = true;
+        }
       }
     }
-
-    // After ~5 seconds, get temperature and new average.
-    if(prevTime >= 5000)
-    {
-      prevTime = currentTime;
-      avgTemperature += getTemperature(THERM_PIN);
-      avgTemperature /= 2.0f;
-      LED_Temperature();
-    }
   }
-
-  // Calculate the average temperature after 5 samples
-  // Sample every 5 seconds
-  // if(currentColour != ColourCode::NONE && counter % 3 == 0)
-  // {
-  //   prevTime = currentTime;
-  //   avgTemperature += getTemperature(THERM_PIN);
-  //   avgTemperature /= 2.0f;
-  //   LED_Temperature();
-  //   //currentColour = getTemperatureColour(avgTemperature);
-  // }
-  if(counter != 0 && counter % 2 == 0)
-  {
-    if(currentTime - prevTime > 2500)
-    {
-      avgTemperature += getTemperature(THERM_PIN);
-      avgTemperature /= 2.0f;
-      LED_Temperature();
-    }
-  }
-  // Green LED pulse longer
-  if(currentColour == ColourCode::GREEN && currentTime - prevTime > 2500)
-  {
-    counter++;
-    prevTime = currentTime;
-    if(isGreen)
-    {
-      G_LED();
-      isGreen = false;
-    }
-    else
-    {
-      RGBOFF();
-      isGreen = true;
-    }
-  }
-  // Yellow LED pulse shorter
-  // Red LED pulse quickly 
-  
 }
 
 void RGBOFF() 
@@ -104,24 +143,29 @@ void G_LED() { greenON(G_PIN); }
 void LED_Temperature()
 {
   currentColour = getTemperatureColour(avgTemperature);
-  switch(currentColour) 
+  if(!isLED_ON)
   {
-    case ColourCode::RED:
-      isRed = true;
-      isGreen = isYellow = false;
-      //R_LED();
-      break;
+    switch(currentColour) 
+    {
+      case ColourCode::RED:
+        isRed = true;
+        isGreen = isYellow = false;
+        //R_LED();
+        break;
 
-    case ColourCode::YELLOW:
-      //Y_LED();
-      isYellow = true;
-      isRed = isGreen = false;
-      break;
+      case ColourCode::YELLOW:
+        //Y_LED();
+        isYellow = true;
+        isRed = isGreen = false;
+        break;
 
-    case ColourCode::GREEN:
-      isGreen = true;
-      isRed = isYellow = false;
-      //G_LED();
-      break;
+      case ColourCode::GREEN:
+        isGreen = true;
+        isRed = isYellow = false;
+        //G_LED();
+        break;
+
+      default: return;
+    }
   }
 }
