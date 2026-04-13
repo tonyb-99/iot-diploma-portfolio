@@ -27,15 +27,15 @@ typedef enum {
   } Conditions;
 
 void initRGB(uint8_t redPin, uint8_t greenPin, uint8_t bluePin);
-void rgbOFF(uint8_t redPin, uint8_t greenPin, uint8_t bluePin);
-void redON(uint8_t redPin, float intensity = 1.0f);
-void greenON(uint8_t greenPin, float intensity = 1.0);
-void yellowON(uint8_t redPin, uint8_t greenPin, float intensity = 1.0f);
-void blueON(uint8_t bluePin, float intensity = 1.0f);
+void rgbOFF(uint8_t redPin, uint8_t greenPin, uint8_t bluePin, bool debug = false);
+void redON(uint8_t redPin, float intensity = 1.0f, bool debug = false);
+void greenON(uint8_t greenPin, float intensity = 1.0, bool debug = false);
+void yellowON(uint8_t redPin, uint8_t greenPin, float intensity = 1.0f, bool debug = false);
+void blueON(uint8_t bluePin, float intensity = 1.0f, bool debug = false);
 
 void initThermistor(uint8_t thermistorPin);
-float getTemperature(uint8_t thermistorPin);
-ColourCode getTemperatureColour(float temperature);
+float getTemperature(uint8_t thermistorPin, bool debug = false);
+ColourCode getTemperatureColour(float temperature, bool debug = false);
 
 
 #endif

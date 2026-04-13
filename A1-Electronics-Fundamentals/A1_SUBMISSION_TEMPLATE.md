@@ -55,10 +55,10 @@ Build an IoT device with temperature monitoring and status display using the fol
 
 | Field | Details |
 |-------|---------|
-| **Student Name** | [Your full name] |
-| **Student ID** | [Your student/enrollment ID] |
+| **Student Name** | Tony Bui |
+| **Student ID** | 20115515 |
 | **Assessment** | A1 – Engine Compartment Monitor |
-| **Submission Date** | [Date submitted to Blackboard] |
+| **Submission Date** | 13/04/26 |
 
 ---
 
@@ -88,10 +88,10 @@ Describe which temperature range you achieved, what colours the LED displayed at
 
 | Requirement | Evidence Provided | Location in Repository |
 |-------------|-------------------|------------------------|
-| Arduino `.ino` file with thermistor and RGB LED code | ☐ Included | `/A1-Electronics-Fundamentals/code/esp32-arduino/` |
-| Thermistor ADC reading and temperature conversion | ☐ Working | Serial output in code |
-| RGB LED PWM control | ☐ Working | analogWrite() in code |
-| Temperature-to-colour mapping logic | ☐ Included | Code comments explain thresholds |
+| Arduino `.ino` file with thermistor and RGB LED code | ✔ Included | `/A1-Electronics-Fundamentals/code/esp32-arduino/` |
+| Thermistor ADC reading and temperature conversion | ✔ Working | Serial output in code |
+| RGB LED PWM control | ✔ Working | analogWrite() in code |
+| Temperature-to-colour mapping logic | ✔ Included | Code comments explain thresholds |
 | Wiring diagram | ☐ Included | Fritzing file or image in folder |
 | Assessment README.md | ☐ Included | `/A1-Electronics-Fundamentals/README.md` |
 
@@ -99,7 +99,7 @@ Describe which temperature range you achieved, what colours the LED displayed at
 
 | Requirement | Evidence | Provided |
 |-------------|----------|----------|
-| **Wokwi Simulation** | Simulation link showing circuit and code working | ☐ Yes |
+| **Wokwi Simulation** | Simulation link showing circuit and code working | ✔ Yes |
 | **OR Breadboard Photo** | Photo of physical circuit with sensors wired | ☐ Yes |
 | **Working System** | Screenshot of serial monitor showing sensor readings | ☐ Yes |
 
@@ -117,15 +117,15 @@ Confirm all requirements completed before submitting:
 
 | Requirement | Completed |
 |-------------|-----------|
-| Thermistor sensor reads temperature correctly | ☐ |
-| Thermistor ADC values convert to °C via formula | ☐ |
-| RGB LED displays green for normal temperature | ☐ |
-| RGB LED displays yellow for warning temperature | ☐ |
-| RGB LED displays red for critical temperature | ☐ |
-| Serial output displays temperature readings | ☐ |
+| Thermistor sensor reads temperature correctly | ✔ |
+| Thermistor ADC values convert to °C via formula | ✔ |
+| RGB LED displays green for normal temperature | ✔ |
+| RGB LED displays yellow for warning temperature | ✔ |
+| RGB LED displays red for critical temperature | ✔ |
+| Serial output displays temperature readings | ✔ |
 | Wiring diagram included and accurate | ☐ |
-| Code is clean and commented | ☐ |
-| GitHub repository is accessible | ☐ |
+| Code is clean and commented | ✔ |
+| GitHub repository is accessible | ✔ |
 | Assessment README documents the work | ☐ |
 | Hardware evidence provided (simulation or photo) | ☐ |
 
@@ -134,20 +134,23 @@ Confirm all requirements completed before submitting:
 ## Optional Notes
 
 [Add any additional context: platform choice, optional features added, challenges encountered, etc.]
-Table ref: https://ntcsensors.com/10k_Type_3_Thermistor_Table/
 Code ref: https://wokwi.com/projects/299330254810382858 
+
+Simulation of thermistor works as it gets the exact temperature on the variable slider. 
+In reality, this is not the case whether a thermistor module or thermistor circuit is used. 
+Likely due to analog input pin is highly sensitive to external interferrence which include loose connections, electromagnetic interferrence etc, lack of signal shielding on wires and the connector.
 ---
 
 ## Submission Declaration
 
 By submitting this form, I confirm that:
 
-- ☐ All code in my A1 folder is my own work
-- ☐ Thermistor is correctly wired and functional
-- ☐ RGB LED is correctly wired and functional
-- ☐ Temperature-to-colour mapping logic is working
-- ☐ Code follows ICTIOT502 assessment requirements
-- ☐ I have not plagiarized or breached academic integrity
+- ✔ All code in my A1 folder is my own work
+- ✔ Thermistor is correctly wired and functional
+- ✔ RGB LED is correctly wired and functional
+- ✔ Temperature-to-colour mapping logic is working
+- ✔ Code follows ICTIOT502 assessment requirements
+- ✔ I have not plagiarized or breached academic integrity
 
 ---
 
