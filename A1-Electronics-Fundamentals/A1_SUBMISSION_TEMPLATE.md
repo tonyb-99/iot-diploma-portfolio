@@ -58,7 +58,7 @@ Build an IoT device with temperature monitoring and status display using the fol
 | **Student Name** | Tony Bui |
 | **Student ID** | 20115515 |
 | **Assessment** | A1 – Engine Compartment Monitor |
-| **Submission Date** | 13/04/26 |
+| **Submission Date** | 14/04/26 |
 
 ---
 
@@ -68,17 +68,22 @@ Build an IoT device with temperature monitoring and status display using the fol
 
 | Field | Details |
 |-------|---------|
-| **Repository URL** | [Paste your GitHub portfolio URL] |
+| **Repository URL** | https://github.com/tonyb-99/iot-diploma-portfolio.git  |
 | **Assessment Folder** | `/A1-Electronics-Fundamentals/` |
 | **Code Location** | `/A1-Electronics-Fundamentals/code/esp32-arduino/` |
-| **Last Commit Date** | [Date of final commit] |
+| **Last Commit Date** | 14/4/26 |
 
 ### Work Completed
 
 **Brief Description:**  
 Describe which temperature range you achieved, what colours the LED displayed at each range, and any challenges with thermistor calibration.
 
-[Your description here - 2-3 sentences]
+Temperature range:
+- Green: 10 *C < temp < 37 *C
+- Yellow: -10 *C < temp < 10 *C OR 36 *C < temp < 43 *C
+- Red: -10 *C > temp OR  temp > 43 *C
+
+In simulation, could achieve all colours as it could simulate any temperature range. In reality, the sensor struggled to pick up correct values due to ESP32 GPIO input pins are extremely sensitive and susceptible to interferrence.
 
 ---
 
@@ -92,22 +97,25 @@ Describe which temperature range you achieved, what colours the LED displayed at
 | Thermistor ADC reading and temperature conversion | ✔ Working | Serial output in code |
 | RGB LED PWM control | ✔ Working | analogWrite() in code |
 | Temperature-to-colour mapping logic | ✔ Included | Code comments explain thresholds |
-| Wiring diagram | ☐ Included | Fritzing file or image in folder |
-| Assessment README.md | ☐ Included | `/A1-Electronics-Fundamentals/README.md` |
+| Wiring diagram | ✔ Included | Fritzing file or image in folder |
+| Assessment README.md | ✔ Included | `/A1-Electronics-Fundamentals/README.md` |
 
 ### Hardware Evidence
 
 | Requirement | Evidence | Provided |
 |-------------|----------|----------|
 | **Wokwi Simulation** | Simulation link showing circuit and code working | ✔ Yes |
-| **OR Breadboard Photo** | Photo of physical circuit with sensors wired | ☐ Yes |
-| **Working System** | Screenshot of serial monitor showing sensor readings | ☐ Yes |
+| **OR Breadboard Photo** | Photo of physical circuit with sensors wired | ✔ Yes |
+| **Working System** | Screenshot of serial monitor showing sensor readings | ✔ Yes |
 
 **Wokwi Link (if used):**  
 [Paste your Wokwi simulation URL here]
 
 **Breadboard Photo/Screenshot:**  
-[Describe what's shown in your evidence]
+
+![alt text](<A1 circuit wiring.jpg>)
+
+![alt text](<A1 diagram.png>)
 
 ---
 
@@ -123,11 +131,11 @@ Confirm all requirements completed before submitting:
 | RGB LED displays yellow for warning temperature | ✔ |
 | RGB LED displays red for critical temperature | ✔ |
 | Serial output displays temperature readings | ✔ |
-| Wiring diagram included and accurate | ☐ |
+| Wiring diagram included and accurate | ✔ |
 | Code is clean and commented | ✔ |
 | GitHub repository is accessible | ✔ |
-| Assessment README documents the work | ☐ |
-| Hardware evidence provided (simulation or photo) | ☐ |
+| Assessment README documents the work | ✔ |
+| Hardware evidence provided (simulation or photo) | ✔ |
 
 ---
 

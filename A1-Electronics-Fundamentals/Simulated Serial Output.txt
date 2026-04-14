@@ -1,0 +1,138 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:1156
+load:0x40078000,len:11456
+ho 0 tail 12 room 4
+load:0x40080400,len:2972
+entry 0x400805dc
+RGB pins initialised.
+Thermistor initialised.
+Time: 1 seconds.
+Analog value: 2093              Temperature: 24.00 *C
+Time: 2 seconds.
+Analog value: 2093              Temperature: 24.00 *C
+Time: 3 seconds.
+Analog value: 2093              Temperature: 24.00 *C
+Time: 4 seconds.
+Analog value: 2093              Temperature: 24.00 *C
+Time: 5 seconds.
+Analog value: 2093              Temperature: 24.00 *C
+Colour code: GREEN
+Analog value: 2093              Temperature: 24.00 *C
+Colour code: GREEN
+Time: 6 seconds.
+Time: 7 seconds.
+Time: 8 seconds.
+Time: 9 seconds.
+Time: 10 seconds.
+Analog value: 2093              Temperature: 24.00 *C
+Colour code: GREEN
+Time: 11 seconds.
+Time: 12 seconds.
+Time: 13 seconds.
+Time: 14 seconds.
+Time: 15 seconds.
+Analog value: 1408              Temperature: 40.29 *C
+Colour code: GREEN
+Time: 16 seconds.
+Time: 17 seconds.
+Time: 18 seconds.
+Time: 19 seconds.
+Time: 20 seconds.
+Analog value: 1408              Temperature: 40.29 *C
+Colour code: GREEN
+Time: 21 seconds.
+Time: 22 seconds.
+Time: 23 seconds.
+Time: 24 seconds.
+Time: 25 seconds.
+Analog value: 1408              Temperature: 40.29 *C
+Colour code: YELLOW
+Time: 26 seconds.
+Time: 27 seconds.
+Time: 28 seconds.
+Time: 29 seconds.
+Time: 30 seconds.
+Analog value: 1408              Temperature: 40.29 *C
+Colour code: YELLOW
+Time: 31 seconds.
+Time: 32 seconds.
+Time: 33 seconds.
+Time: 34 seconds.
+Time: 35 seconds.
+Analog value: 1408              Temperature: 40.29 *C
+Colour code: YELLOW
+Time: 36 seconds.
+Time: 37 seconds.
+Time: 38 seconds.
+Time: 39 seconds.
+Time: 40 seconds.
+Analog value: 705               Temperature: 65.09 *C
+Colour code: RED
+Time: 41 seconds.
+Time: 42 seconds.
+Time: 43 seconds.
+Time: 44 seconds.
+Time: 45 seconds.
+Analog value: 705               Temperature: 65.09 *C
+Colour code: RED
+Time: 46 seconds.
+Time: 47 seconds.
+Time: 48 seconds.
+Time: 49 seconds.
+Time: 50 seconds.
+Analog value: 991               Temperature: 53.12 *C
+Colour code: RED
+Time: 51 seconds.
+Time: 52 seconds.
+Time: 53 seconds.
+Time: 54 seconds.
+Time: 55 seconds.
+Analog value: 2866              Temperature: 7.09 *C
+Colour code: GREEN
+Time: 56 seconds.
+Time: 57 seconds.
+Time: 58 seconds.
+Time: 59 seconds.
+Time: 60 seconds.
+Analog value: 2866              Temperature: 7.09 *C
+Colour code: GREEN
+Time: 61 seconds.
+Time: 62 seconds.
+Time: 63 seconds.
+Time: 64 seconds.
+Time: 65 seconds.
+Analog value: 2866              Temperature: 7.09 *C
+Colour code: GREEN
+Time: 66 seconds.
+Time: 67 seconds.
+Time: 68 seconds.
+Time: 69 seconds.
+Time: 70 seconds.
+Analog value: 3364              Temperature: -5.80 *C
+Colour code: YELLOW
+Time: 71 seconds.
+Time: 72 seconds.
+Time: 73 seconds.
+Time: 74 seconds.
+Time: 75 seconds.
+Analog value: 3364              Temperature: -5.80 *C
+Colour code: YELLOW
+Time: 76 seconds.
+Time: 77 seconds.
+Time: 78 seconds.
+Time: 79 seconds.
+Time: 80 seconds.
+Analog value: 3750              Temperature: -20.50 *C
+Colour code: RED
+Time: 81 seconds.
+Time: 82 seconds.
+Time: 83 seconds.
+Time: 84 seconds.
+Time: 85 seconds.
+Analog value: 3750              Temperature: -20.50 *C
+Colour code: RED

@@ -1,0 +1,120 @@
+Time: 1 seconds.
+Analog value: 0		Temperature: -273.15 ℃
+Time: 2 seconds.
+Analog value: 0		Temperature: -273.15 ℃
+Time: 3 seconds.
+Analog value: 0		Temperature: -273.15 ℃
+Time: 4 seconds.
+Analog value: 10		Temperature: 272.74 ℃
+Time: 5 seconds.
+Analog value: 1243		Temperature: 44.94 ℃
+Colour code: GREEN
+Analog value: 787		Temperature: 61.24 ℃
+Colour code: RED
+Time: 6 seconds.
+Time: 7 seconds.
+Time: 8 seconds.
+Time: 9 seconds.
+Time: 10 seconds.
+Analog value: 4095		Temperature: -273.15 ℃
+Colour code: RED
+Time: 11 seconds.
+Time: 12 seconds.
+Time: 13 seconds.
+Time: 14 seconds.
+Time: 15 seconds.
+Analog value: 4095		Temperature: -273.15 ℃
+Colour code: RED
+Time: 16 seconds.
+Time: 17 seconds.
+Time: 2 seconds.
+Analog value: 0		Temperature: -273.15 *C
+Time: 3 seconds.
+Analog value: 688		Temperature: 65.95 *C
+Time: 4 seconds.
+Analog value: 2352		Temperature: 18.41 *C
+Time: 5 seconds.
+Analog value: 3180		Temperature: -0.62 *C
+Colour code: RED
+Analog value: 2823		Temperature: 8.08 *C
+Colour code: YELLOW
+Time: 6 seconds.
+Time: 7 seconds.
+Time: 8 seconds.
+Time: 9 seconds.
+Time: 10 seconds.
+Analog value: 5		Temperature: 330.69 *C
+Colour code: RED
+Time: 11 seconds.
+Time: 12 seconds.
+Time: 13 seconds.
+Time: 14 seconds.
+Time: 15 seconds.
+Analog value: 0		Temperature: -273.15 *C
+Colour code: RED
+Time: 16 seconds.
+Time: 17 seconds.
+Time: 18 seconds.
+Time: 19 seconds.
+Time: 20 seconds.
+Analog value: 0		Temperature: -273.15 *C
+Colour code: RED
+Time: 21 seconds.
+Time: 22 seconds.
+Time: 23 seconds.
+Time: 24 seconds.
+Time: 25 seconds.
+Analog value: 2292		Temperature: 19.70 *C
+Colour code: RED
+Time: 26 seconds.
+Time: 27 seconds.
+Time: 28 seconds.
+Time: 29 seconds.
+Time: 30 seconds.
+Analog value: 3463		Temperature: -8.92 *C
+Colour code: RED
+Time: 31 seconds.
+Time: 32 seconds.
+Time: 33 seconds.
+Time: 34 seconds.
+Time: 35 seconds.
+Analog value: 2160		Temperature: 22.54 *C
+Colour code: YELLOW
+Time: 36 seconds.
+Time: 37 seconds.
+Time: 38 seconds.
+Time: 39 seconds.
+Time: 40 seconds.
+Analog value: 0		Temperature: -273.15 *C
+Colour code: RED
+Time: 41 seconds.
+Time: 42 seconds.
+Time: 43 seconds.
+Time: 44 seconds.
+Time: 45 seconds.
+Analog value: 0		Temperature: -273.15 *C
+Colour code: RED
+Time: 46 seconds.
+Time: 47 seconds.
+Time: 48 seconds.
+Time: 49 seconds.
+Time: 50 seconds.
+Analog value: 16		Temperature: 239.35 *C
+Colour code: GREEN
+Time: 51 seconds.
+Time: 52 seconds.
+Time: 53 seconds.
+Time: 54 seconds.
+Time: 55 seconds.
+Analog value: 2039		Temperature: 25.19 *C
+Colour code: GREEN
+Time: 56 seconds.
+Time: 57 seconds.
+Time: 58 seconds.
+Time: 59 seconds.
+Time: 60 seconds.
+Analog value: 4095		Temperature: -273.15 *C
+Colour code: RED
+Time: 61 seconds.
+Time: 62 seconds.
+Time: 63 seconds.
