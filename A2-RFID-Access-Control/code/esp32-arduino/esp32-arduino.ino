@@ -16,7 +16,9 @@
 
 typedef enum {
   IDLE,
-  TAPPED,
+  INSPECT,
+  REGISTRATION,
+  VALIDATED,
 } States;
 
 States cardState = States::IDLE;
@@ -30,6 +32,7 @@ unsigned long startTick = 0;
 const char* passKey = "/passKey.txt";
 const bool debug = true;
 bool cardDetected = false;
+bool playedSFX = false;
 MFRC522::Uid user[TABLESIZE];
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
@@ -55,6 +58,38 @@ void setup()
 
   SPI.begin();
   mfrc522.PCD_Init();
+  delay(1000);
+  prefs.begin("rfid", false);
+  //prefs.clear();
+  byte keyData[MFRC522::MIFARE_Misc::MF_KEY_SIZE];
+  size_t len = prefs.getBytesLength("key");
+  Serial.print("Key length: ");
+  Serial.println(len);
+
+  if(len == MFRC522::MIFARE_Misc::MF_KEY_SIZE)
+  {
+    Serial.println("Key exists in memory!");
+    prefs.getBytes("key", key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+  }
+  else
+  {
+    Serial.println("Generating new key in memory...");
+    for(byte i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
+    {
+      keyData[i] = (byte)(esp_random() & 0xff);
+      key.keyByte[i] = keyData[i];
+    }
+    prefs.putBytes("key", keyData, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+
+  }
+  prefs.end();
+  dump_byte_array(key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+  Serial.println();
+
+  initLittleFS();
+
+
+
   Serial.println("Tap to begin ...");
 }
 
@@ -98,8 +133,12 @@ void loop() {
             {
                 startTick = tick;
                 cardDetected = true;
-                cardState = States::TAPPED;
+                cardState = States::INSPECT;
+
                 digitalWrite(R_PIN, LOW);
+                digitalWrite(G_PIN, HIGH);
+                playOnTap(SPEAKER_PIN);
+
                 Serial.println("Card detected!");
                 Serial.print(F("Card UID:"));
                 dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
@@ -112,13 +151,21 @@ void loop() {
             }
             break;
 
-        case States::TAPPED: {
+        case States::INSPECT: {
+            if(tick - startTick > 5)
+            {
+                digitalWrite(G_PIN, LOW);
+            }
+
             if(tick - startTick > 60)
             {
+                startTick = 0;
                 cardState = States::IDLE;
                 Serial.println("Process timed out! Please tap again ...");
                 break;
             }
+
+
             break;
         }
     }
