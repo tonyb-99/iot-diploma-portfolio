@@ -17,8 +17,6 @@
 typedef enum {
   IDLE,
   TAPPED,
-  PROCESSING,
-  AUTHENTICATE,
 } States;
 
 States cardState = States::IDLE;
@@ -52,26 +50,78 @@ void setup()
 {
   Serial.begin(9600);
   while(!Serial);
+  pinMode(R_PIN, OUTPUT);
+  pinMode(G_PIN, OUTPUT);
+
   SPI.begin();
   mfrc522.PCD_Init();
+  Serial.println("Tap to begin ...");
 }
 
 void loop() {
-    if (millis() - prevTime >= 1000) {
-        Serial.println("1 second passed");
+    if (millis() - prevTime >= 100) {
         prevTime = millis();
+        tick++;
     }
 
-    // RFID logic (independent)
-    if (!mfrc522.PICC_IsNewCardPresent())
-        return;
+    if(lastTick != tick)
+    {
+        lastTick = tick;
+        if(tick != 0 && tick % 10 == 0)
+        {
+            Serial.print("Time: ");
+            Serial.print(tick / 10);
+            Serial.println(" sec");
+        } 
+    }
 
-    if (!mfrc522.PICC_ReadCardSerial())
-        return;
+    switch(cardState)
+    {
+        case States::IDLE:
+            if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial())
+            {
+                cardDetected = false;
+                digitalWrite(G_PIN, LOW);
+                if((tick % 30) < 10)
+                {
+                    digitalWrite(R_PIN, HIGH);
+                //   Serial.println("RED LED: HIGH");
+                }
+                else
+                {
+                    digitalWrite(R_PIN, LOW);
+                //   Serial.println("RED LED: LOW");
+                }
+                return;
+            }
+            else
+            {
+                startTick = tick;
+                cardDetected = true;
+                cardState = States::TAPPED;
+                digitalWrite(R_PIN, LOW);
+                Serial.println("Card detected!");
+                Serial.print(F("Card UID:"));
+                dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
+                Serial.println();
+                Serial.print("PICC type: ");
+                MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+                Serial.println(mfrc522.PICC_GetTypeName(piccType));
+                mfrc522.PICC_HaltA();       // Halt PICC
+                //mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+            }
+            break;
 
-    Serial.print(F("Card UID:"));
-    dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
-    Serial.println();
+        case States::TAPPED: {
+            if(tick - startTick > 60)
+            {
+                cardState = States::IDLE;
+                Serial.println("Process timed out! Please tap again ...");
+                break;
+            }
+            break;
+        }
+    }
 }
 
 /**
