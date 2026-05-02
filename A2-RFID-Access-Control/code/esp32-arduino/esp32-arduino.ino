@@ -5,7 +5,7 @@
 #include "file_manager.h"
 #include "sounds.h"
 
-// Code based on RandomNerdTutorial (2026). https://randomnerdtutorials.com/esp32-mfrc522-rfid-reader-arduino/
+// Code based on RandomNerdTutorial (2026). https://randomnerdtutorials.com/esp32-mfrc522-rfid-reader-arduino/  https://randomnerdtutorials.com/esp32-rfid-user-management-web-server/
 
 #define SPKR_PIN 25
 #define G_PIN   26
@@ -125,6 +125,7 @@ void loop() {
     switch(cardState)
     {
         case States::IDLE:
+        {
             if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial())
             {
                 //cardDetected = false;
@@ -141,30 +142,35 @@ void loop() {
                 }
                 return;
             }
-            else
-            {
-                startTick = tick;
-                //cardDetected = true;
-                cardState = States::INSPECT;
 
-                digitalWrite(R_PIN, LOW);
-                digitalWrite(G_PIN, HIGH);
-                
+            startTick = tick;
+            //cardDetected = true;
+            cardState = States::INSPECT;
 
-                Serial.println("Card detected!");
-                Serial.print(F("Card UID:"));
-                dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
-                Serial.println();
-                Serial.print("PICC type: ");
-                MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
-                Serial.println(mfrc522.PICC_GetTypeName(piccType));
-                mfrc522.PICC_HaltA();       // Halt PICC
-                
-                playOnTap(SPKR_PIN);
-            }
-            break;
+            digitalWrite(R_PIN, LOW);
+            digitalWrite(G_PIN, HIGH);
+            
 
-        case States::INSPECT: {
+            Serial.println("Card detected!");
+            Serial.print(F("Card UID:"));
+            dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
+            Serial.println();
+            Serial.print("PICC type: ");
+            MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
+            Serial.println(mfrc522.PICC_GetTypeName(piccType));
+            //mfrc522.PICC_HaltA();       // Halt PICC
+            
+            playOnTap(SPKR_PIN);
+            return;
+        }
+        case States::INSPECT: 
+        {
+            // if(!mfrc522.PICC_ReadCardSerial())
+            // {
+            //     cardState = States::IDLE;
+            //     return;
+            // }
+
             if(tick - startTick > 5)
             {
                 digitalWrite(G_PIN, LOW);
@@ -209,7 +215,8 @@ void loop() {
             break;
         }
 
-        case States::SETUP:{
+        case States::SETUP:
+        {
             // Try the known default keys
             MFRC522::MIFARE_Key keys;
             bool hasKey = false;
@@ -225,17 +232,16 @@ void loop() {
                     // no need to try other keys for this PICC
                     Serial.println("Contains known key: ");
                     dump_byte_array(keys.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
-                    //cardState = States::WRITE;
-                    
+                    Serial.println();
                     break;
                 }
                 
                 // // End check if new card is detected
                 // // http://arduino.stackexchange.com/a/14316
-                // if ( ! mfrc522.PICC_IsNewCardPresent())
-                //     break;
-                // if ( ! mfrc522.PICC_ReadCardSerial())
-                    // break;
+                if ( ! mfrc522.PICC_IsNewCardPresent())
+                    break;
+                if ( ! mfrc522.PICC_ReadCardSerial())
+                    break;
             }
 
             if(!hasKey)
@@ -247,31 +253,37 @@ void loop() {
             }
             else
             {
-                byte buffer[18];
-                byte block = 0;
-                MFRC522::StatusCode status;
+                //cardState = States::WRITE;
+                // byte buffer[18];
+                // byte block = 2;
+                // MFRC522::StatusCode status;
 
-                // Re-authenticate
-                status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, &keys, &(mfrc522.uid));
-                if(status != MFRC522::StatusCode::STATUS_OK)
-                {
-                    cardState = States::IDLE;
-                    Serial.print("PCD_Authenticate() failed: ");
-                    Serial.println(mfrc522.GetStatusCodeName(status));
-                    playDeclined(SPKR_PIN);
-                    break;
-                }
-                else
-                {
-                    cardState = States::WRITE;
-
-                }
+                // // Re-authenticate
+                // status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, &keys, &(mfrc522.uid));
+                // if(status != MFRC522::StatusCode::STATUS_OK)
+                // {
+                //     cardState = States::IDLE;
+                //     Serial.print("PCD_Authenticate() failed: ");
+                //     Serial.println(mfrc522.GetStatusCodeName(status));
+                //     playDeclined(SPKR_PIN);
+                //     break;
+                // }
+                // else
+                // {
+                //     cardState = States::WRITE;
+                // }
             }
 
 
             break;
         }
-        case States::WRITE:{
+        case States::WRITE:
+        {
+            if(!mfrc522.PICC_ReadCardSerial())
+            {
+                cardState = States::IDLE;
+                return;
+            }
             byte trailerAddress = 3;
             byte dataAddress = 2;
             // byte buffer[18];
@@ -293,7 +305,10 @@ void loop() {
                     playDeclined(SPKR_PIN);
                     break;
                 }
+                setupCompleted();
             }
+
+            
 
             mfrc522.MIFARE_Read(trailerAddress, dataBlock, &blockSize);
             memcpy(dataBlock, key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
@@ -338,13 +353,18 @@ void loop() {
             //     playDeclined(SPKR_PIN);
             // }
             
-            setupComplete = true;
             cardState = States::IDLE;
             mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
 
             break;
         }
-        case States::READ: {
+        case States::READ: 
+        {
+            // if(!mfrc522.PICC_ReadCardSerial())
+            // {
+            //     cardState = States::IDLE;
+            //     return;
+            // }
             // Check trailer address
             byte dataAddress = 2;
             byte buffer[18];
@@ -410,7 +430,13 @@ void loop() {
             break;
             
         }
-        case States::ACCEPT:{
+        case States::ACCEPT:
+        {
+            // if(!mfrc522.PICC_ReadCardSerial())
+            // {
+            //     cardState = States::IDLE;
+            //     return;
+            // }
             break;
         }
     }
@@ -439,26 +465,26 @@ bool try_key(MFRC522::MIFARE_Key *key)
     byte block = 0;
     MFRC522::StatusCode status;
 
-    // Serial.println(F("Authenticating using key A..."));
-    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, key, &(mfrc522.uid));
-    if (status != MFRC522::STATUS_OK) {
-        // Serial.print(F("PCD_Authenticate() failed: "));
-        // Serial.println(mfrc522.GetStatusCodeName(status));
+    Serial.println(F("Authenticating using key A..."));
+    status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, key, &(mfrc522.uid));
+    if (status != MFRC522::StatusCode::STATUS_OK) {
+        Serial.print(F("PCD_Authenticate() failed: "));
+        Serial.println(mfrc522.GetStatusCodeName(status));
         return false;
     }
 
     // Read block
     byte byteCount = sizeof(buffer);
     status = mfrc522.MIFARE_Read(block, buffer, &byteCount);
-    if (status != MFRC522::STATUS_OK) {
-        // Serial.print(F("MIFARE_Read() failed: "));
-        // Serial.println(mfrc522.GetStatusCodeName(status));
+    if (status != MFRC522::StatusCode::STATUS_OK) {
+        Serial.print(F("MIFARE_Read() failed: "));
+        Serial.println(mfrc522.GetStatusCodeName(status));
     }
     else {
         // Successful read
         result = true;
         Serial.print(F("Success with key:"));
-        dump_byte_array((*key).keyByte, MFRC522::MF_KEY_SIZE);
+        dump_byte_array((*key).keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
         Serial.println();
         // Dump block data
         Serial.print(F("Block ")); Serial.print(block); Serial.print(F(":"));
@@ -472,3 +498,11 @@ bool try_key(MFRC522::MIFARE_Key *key)
     return result;
 }
 
+void setupCompleted()
+{
+    prefs.begin("rfid", false);
+    prefs.putBool("setup", true);
+    setupComplete = true;
+    Serial.println("Setup has been completed!");
+    prefs.end();
+}
