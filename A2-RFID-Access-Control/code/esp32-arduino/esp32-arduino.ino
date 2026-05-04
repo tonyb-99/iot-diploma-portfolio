@@ -187,6 +187,7 @@ void loop() {
 
             if(!setupComplete || registerMode)
             {
+                Serial.println("Preparing setup for master keycard ...");
                 cardState = States::SETUP;
                 break;
             }
@@ -198,16 +199,25 @@ void loop() {
             status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
             if(status != MFRC522::StatusCode::STATUS_OK)
             {
+                if(setupComplete && registerMode)
+                {
+                    cardState = States::SETUP;
+                    Serial.println("Assigning new card ...");
+                }
+                else
+                {
                 cardState = States::IDLE;
                 Serial.print("PCD_Authenticate() failed: ");
                 Serial.println(mfrc522.GetStatusCodeName(status));
                 playDeclined(SPKR_PIN);
+                }
                 break;
 
                 
             }
             else
             {
+                Serial.println("Keys match! Now reading ...");
                 cardState = States::READ;
                 playSuccess(SPKR_PIN);
             }
@@ -254,28 +264,12 @@ void loop() {
             else
             {
                 cardState = States::WRITE;
-                // byte block = 0;
-                // MFRC522::StatusCode status;
-                // // Re-authenticate
-                // status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, &keys, &(mfrc522.uid));
-                // if(status != MFRC522::StatusCode::STATUS_OK)
-                // {
-                //     cardState = States::IDLE;
-                //     Serial.print("PCD_Authenticate() failed: ");
-                //     Serial.println(mfrc522.GetStatusCodeName(status));
-                //     playDeclined(SPKR_PIN);
-                //     break;
-                // }
-                // else
-                // {
-                //     cardState = States::WRITE;
-                // }
             }
 
 
             break;
         }
-        case States::WRITE:
+        case States::WRITE:     //Assign?
         {
             byte trailerAddress = 3;
             byte dataAddress = 2;
@@ -337,37 +331,6 @@ void loop() {
                 Serial.println("Write successful!");
                 setupCompleted();
             }
-
-            // // Check key and data block
-            // status = mfrc522.MIFARE_Read(dataAddress, buffer, &blockSize);
-            // if(status != MFRC522::StatusCode::STATUS_OK)
-            // {
-            //     cardState = States::IDLE;
-            //     Serial.print(F("MIFARE_Read() failed: "));
-            //     Serial.println(mfrc522.GetStatusCodeName(status));
-            //     playDeclined(SPKR_PIN);
-            //     break;
-            // }
-            // byte count = 0;
-            // for(byte i = 0; i < 16; i++)
-            // {
-            //     if(buffer[i] == dataBlock[i])
-            //     {
-            //         count++;
-            //     }
-            // }
-
-            // if(count == 16)
-            // {
-            //     Serial.print("Number of bytes that match = ");
-            //     Serial.println(count);
-            //     playSuccess(SPKR_PIN);
-            // }
-            // else
-            // {
-            //     Serial.println("No match!"); 
-            //     playDeclined(SPKR_PIN);
-            // }
             
             cardState = States::IDLE;
             mfrc522.PICC_HaltA();
@@ -377,12 +340,6 @@ void loop() {
         }
         case States::READ: 
         {
-            // if(!mfrc522.PICC_ReadCardSerial())
-            // {
-            //     cardState = States::IDLE;
-            //     return;
-            // }
-            // Check trailer address
             byte dataAddress = 2;
             byte buffer[18];
             byte blockSize = sizeof(buffer);
@@ -412,6 +369,7 @@ void loop() {
                 count++;
             }
 
+            // If contains label master, toggle bool to allow card registration until tagged off
             isMaster = count == text.size();
             if(isMaster)
             {
@@ -425,30 +383,28 @@ void loop() {
                 {
                     registerMode = false;
                 }
+                Serial.print("Register Mode: ");
+                Serial.println(registerMode);
+                cardState = States::IDLE;
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                 break;
             }
 
                 
-            count = 0;
-            // If contains label master, toggle bool to allow card registration until tagged off
-            // Otherwise if empty/zeroes, hash the uid and store in the datablock and esp32 file.
-            if(count != MFRC522::MIFARE_Misc::MF_KEY_SIZE)
-            {
-                cardState = States::IDLE;
-                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
-                Serial.print("PCD_Authenticate() failed: ");
-                playDeclined(SPKR_PIN);
-                break;
-            }
+            // Check datablock for hash key
+                // If none, create a hash and save to file.
+                // If exists, clear uid at hash value & empty the data block
+
 
             
-            cardState = States::ACCEPT;
-
+            cardState = States::IDLE;       // TEMP
             break;
             
         }
         case States::ACCEPT:
         {
+            // Play success sound and time within 3 seconds before returning to idle.
             // if(!mfrc522.PICC_ReadCardSerial())
             // {
             //     cardState = States::IDLE;
@@ -518,9 +474,9 @@ bool try_key(MFRC522::MIFARE_Key *key)
 
 void setupCompleted()
 {
+    setupComplete = true;
     prefs.begin("rfid", false);
     prefs.putBool("setup", true);
-    setupComplete = true;
     Serial.println("Setup has been completed!");
     prefs.end();
 }
