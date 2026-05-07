@@ -7,6 +7,7 @@
 File fileData;
 const String fileName = "/vibration_data.csv";
 const bool debug = true;
+bool hasCalibrated = false;
 
 // https://randomnerdtutorials.com/esp32-how-to-log-data/
 // https://randomnerdtutorials.com/esp32-microsd-card-arduino/
@@ -33,17 +34,21 @@ void setup(void) {
 
 void loop() {
 
-  /* Get new sensor events with the readings */
-  sensors_event_t a, g, temp;
-  mpu.getEvent(&a, &g, &temp);
-
+  if(!hasCalibrated)
+  {
+    calibrateA(true);
+    hasCalibrated = true;
+    delay(2000);
+  }
+  
+  sensorUpdate();
   Serial.print("Acceleration X: ");
-  Serial.print(a.acceleration.x);
+  Serial.print(getAcceleration_x());
   Serial.print(", Y: ");
-  Serial.print(a.acceleration.y);
+  Serial.print(getAcceleration_y());
   Serial.print(", Z: ");
-  Serial.print(a.acceleration.z);
+  Serial.print(getAcceleration_z());
   Serial.println(" m/s^2");
 
-  delay(500);
+  delay(1000);
 }

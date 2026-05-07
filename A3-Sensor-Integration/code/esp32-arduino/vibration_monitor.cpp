@@ -1,6 +1,13 @@
 #include "vibration_monitor.h"
 
 Adafruit_MPU6050 mpu;
+sensors_event_t a, g, temp;
+
+namespace {
+  float offsetX;
+  float offsetY;
+  float offsetZ;
+}
 
 void initVibrationMonitor(byte accelerometer, byte gyro, byte bandwidth, bool debug)
 {
@@ -77,3 +84,72 @@ void initVibrationMonitor(byte accelerometer, byte gyro, byte bandwidth, bool de
     Serial.println("");
   }
 }
+
+void calibrateA(bool debug)
+{
+  const int sampleSize = 100;
+  float sumX = 0;
+  float sumY = 0;
+  float sumZ = 0;
+
+  for(int i = 0; i < sampleSize; i++)
+  {
+    mpu.getEvent(&a, &g, &temp);
+    sumX += a.acceleration.x;
+    sumY += a.acceleration.y;
+    sumZ += a.acceleration.z;
+    
+    delay(10);
+  }
+
+  offsetX = sumX / sampleSize;
+  offsetY = sumY / sampleSize;
+  offsetZ = sumZ / sampleSize - 9.81;
+
+  if(debug)
+  {
+    Serial.printf(
+      "Offsets (100 samples): (x:%.3f, y:%.3f, z:%.3f)\n", 
+      offsetX, 
+      offsetY, 
+      offsetZ
+      );
+  }
+}
+
+void sensorUpdate()
+{
+  mpu.getEvent(&a, &g, &temp);
+}
+
+float getAcceleration_x()
+{
+  return a.acceleration.x - offsetX;
+}
+
+float getAcceleration_y()
+{
+  return a.acceleration.y - offsetY;
+}
+
+float getAcceleration_z()
+{
+  return a.acceleration.z - offsetZ;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
