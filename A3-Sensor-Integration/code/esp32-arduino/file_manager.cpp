@@ -8,6 +8,28 @@ void initLittleFS() {
   Serial.println("LittleFS mounted successfully");
 }
 
+void initSDReader(uint8_t cs_pin, bool debug)
+{
+  if(!SD.begin(cs_pin))
+  {
+    while(1) 
+    {
+      Serial.println("SD Card not detected!");
+      delay(1000);
+    }
+  }
+
+  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+  if(debug)
+  {
+    Serial.print("SD Card Size: ");
+    Serial.print(cardSize);
+    Serial.println("MB");
+    Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
+    Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
+  }
+}
+
 // Read File from LittleFS
 String readFile(fs::FS &fs, const char * path, bool debug){
   Serial.printf("Reading file: %s\r\n", path); 
@@ -53,5 +75,29 @@ void deleteFile(fs::FS &fs, const char *path) {
     Serial.println("- file deleted");
   } else {
     Serial.println("- delete failed");
+  }
+}
+
+void SD_FileCheck(File file, String fileName, bool debug)
+{
+  if(!SD.exists(fileName))
+  {
+    if(debug)
+    {
+      Serial.print("Unable to locate file. Creating new ");
+      Serial.print(fileName);
+      Serial.println(" file ...");
+    }
+    file = SD.open(fileName, FILE_WRITE);
+    file.close();
+  }
+
+  if(SD.exists(fileName))
+  {
+    if(debug)
+    {
+      Serial.print("SD card contains the file ");
+      Serial.println(fileName);
+    }
   }
 }
