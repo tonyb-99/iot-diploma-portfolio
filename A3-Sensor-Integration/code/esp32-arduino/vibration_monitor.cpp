@@ -4,12 +4,16 @@ Adafruit_MPU6050 mpu;
 sensors_event_t a, g, temp;
 
 namespace {
-  float offsetX;
-  float offsetY;
-  float offsetZ;
+  float offsetX = 0, offsetY = 0, offsetZ = 0;
+  unsigned long count = 0;
+  const int bufferSize = 5;
+  float bufferX[5];
+  float bufferY[5];
+  float bufferZ[5];
+  float avgX = 0, avgY = 0, avgZ = 0;
 }
 
-void initVibrationMonitor(byte accelerometer, byte gyro, byte bandwidth, bool debug)
+void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t bandwidth, bool debug)
 {
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
@@ -18,9 +22,9 @@ void initVibrationMonitor(byte accelerometer, byte gyro, byte bandwidth, bool de
     }
   }
 
-  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-  mpu.setFilterBandwidth(MPU6050_BAND_10_HZ);
+  mpu.setAccelerometerRange(accelerometer);
+  mpu.setGyroRange(gyro);
+  mpu.setFilterBandwidth(bandwidth);
 
   if(debug)
   {
@@ -85,12 +89,20 @@ void initVibrationMonitor(byte accelerometer, byte gyro, byte bandwidth, bool de
   }
 }
 
+void initInterrupt(mpu6050_highpass_t highpassBandwidth, float lsb, float duration)
+{
+  mpu.setHighPassFilter(highpassBandwidth);
+  mpu.setMotionDetectionThreshold(lsb);
+  mpu.setMotionDetectionDuration(duration);
+  mpu.setInterruptPinLatch(true);	// Keep it latched.  Will turn off when reinitialized.
+  mpu.setInterruptPinPolarity(true);
+  mpu.setMotionInterrupt(true);
+}
+
 void calibrateA(bool debug)
 {
-  const int sampleSize = 100;
-  float sumX = 0;
-  float sumY = 0;
-  float sumZ = 0;
+  int sampleSize = 100;
+  float sumX = 0, sumY = 0, sumZ = 0;
 
   for(int i = 0; i < sampleSize; i++)
   {
@@ -117,31 +129,99 @@ void calibrateA(bool debug)
   }
 }
 
-void sensorUpdate()
+void sensorUpdate(bool debug)
 {
   mpu.getEvent(&a, &g, &temp);
+  lowPassFiltering(debug);
 }
 
-float getAcceleration_x()
+float getRawAcceleration_x()
 {
   return a.acceleration.x - offsetX;
 }
 
-float getAcceleration_y()
+float getRawAcceleration_y()
 {
   return a.acceleration.y - offsetY;
 }
 
-float getAcceleration_z()
+float getRawAcceleration_z()
 {
   return a.acceleration.z - offsetZ;
 }
 
+void lowPassFiltering(bool debug)
+{
+  // Each time function is called, add values to buffer
+  int index = count % bufferSize;
+  float sumX = 0, sumY = 0, sumZ = 0;
 
+  float rawX = getRawAcceleration_x();
+  float rawY = getRawAcceleration_y();
+  float rawZ = getRawAcceleration_z();
 
+  bufferX[index] = rawX;
+  bufferY[index] = rawY;
+  bufferZ[index] = rawZ;
+  // Begin averaging after first value recorded
 
+  if(count == 0)
+  {
+    avgX = bufferX[index];
+    avgY = bufferY[index];
+    avgZ = bufferZ[index];
+  }
+  else if(count > 0 && count < bufferSize)
+  {
+    int samples = count + 1;
+    for(int i = 0; i <= count; i++)
+    {
+        sumX += bufferX[i];
+        sumY += bufferY[i];
+        sumZ += bufferZ[i];
+    }
+    avgX = sumX / samples;
+    avgY = sumY / samples;
+    avgZ = sumZ / samples;
+  }
+  // Replace the older values from the start upon reaching the end of buffer
+  else
+  {
+    for(int i = 0; i < bufferSize; i++)
+    {
+        sumX += bufferX[i];
+        sumY += bufferY[i];
+        sumZ += bufferZ[i];
+    }
+    avgX = sumX / bufferSize;
+    avgY = sumY / bufferSize;
+    avgZ = sumZ / bufferSize;
+  }
 
+  if(debug)
+  {
+    Serial.printf("(%i): Raw accelermoter values: (x=%.3f, y=%.3f, z=%.3f) ms^-2\n", count, rawX, rawY, rawZ);
+    Serial.printf("(%i): Moving avg values: (x=%.3f, y=%.3f, z=%.3f) ms^-2\n", count, avgX, avgY, avgZ);
+    Serial.println();
+  }
 
+  count++;
+}
+
+float getAvgAcceleration_x()
+{
+  return avgX;
+}
+
+float getAvgAcceleration_y()
+{
+  return avgY;
+}
+
+float getAvgAcceleration_z()
+{
+  return avgZ;
+}
 
 
 

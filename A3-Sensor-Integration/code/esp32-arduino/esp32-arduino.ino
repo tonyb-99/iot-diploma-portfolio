@@ -20,15 +20,18 @@ bool hasCalibrated = false;
 
 // Calculate offset
 // Calculate moving average using low pass filter: ideal for stable values as sensor is stationary.
+// Peak ground acceleration (PGA): https://en.wikipedia.org/wiki/Peak_ground_acceleration
+// Threshold +/- 0.02 g, unstable.
+
 
 void setup(void) {
   Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
-  initSDReader(CS_PIN, debug);
-  SD_FileCheck(fileData, fileName, debug);
-  initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_10_HZ);
+  //initSDReader(CS_PIN, debug);
+  //SD_FileCheck(fileData, fileName, debug);
+  initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
   delay(100);
 }
 
@@ -41,14 +44,6 @@ void loop() {
     delay(2000);
   }
   
-  sensorUpdate();
-  Serial.print("Acceleration X: ");
-  Serial.print(getAcceleration_x());
-  Serial.print(", Y: ");
-  Serial.print(getAcceleration_y());
-  Serial.print(", Z: ");
-  Serial.print(getAcceleration_z());
-  Serial.println(" m/s^2");
-
+  sensorUpdate(true);
   delay(1000);
 }
