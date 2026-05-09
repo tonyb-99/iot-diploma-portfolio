@@ -2,6 +2,7 @@
 
 Adafruit_MPU6050 mpu;
 sensors_event_t a, g, temp;
+bool isAbnormal = false;
 
 namespace {
   float offsetX = 0, offsetY = 0, offsetZ = 0;
@@ -89,7 +90,7 @@ void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_rang
   }
 }
 
-void initInterrupt(mpu6050_highpass_t highpassBandwidth, float lsb, float duration)
+void initVibrationInterrupt(mpu6050_highpass_t highpassBandwidth, float lsb, float duration)
 {
   mpu.setHighPassFilter(highpassBandwidth);
   mpu.setMotionDetectionThreshold(lsb);

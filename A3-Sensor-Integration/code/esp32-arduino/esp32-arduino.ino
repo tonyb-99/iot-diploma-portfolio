@@ -32,6 +32,7 @@ void setup(void) {
   //initSDReader(CS_PIN, debug);
   //SD_FileCheck(fileData, fileName, debug);
   initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
+  initVibrationInterrupt(MPU6050_HIGHPASS_0_63_HZ, 10);
   delay(100);
 }
 
@@ -43,7 +44,9 @@ void loop() {
     hasCalibrated = true;
     delay(2000);
   }
-  
-  sensorUpdate(true);
-  delay(1000);
+  if(mpu.getMotionInterruptStatus())
+  {
+    sensorUpdate(true);
+  }
+  delay(10);
 }
