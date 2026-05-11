@@ -30,7 +30,7 @@ void initSDReader(uint8_t cs_pin, bool debug)
   }
 }
 
-// Read File from LittleFS
+// Read File 
 String readFile(fs::FS &fs, const char * path, bool debug){
   Serial.printf("Reading file: %s\r\n", path); 
 
@@ -52,7 +52,7 @@ String readFile(fs::FS &fs, const char * path, bool debug){
   return fileContent;
 }
 
-// Write file to LittleFS
+// Write file
 void writeFile(fs::FS &fs, const char * path, const char * message){
   Serial.printf("Writing file: %s\r\n", path);
 
@@ -66,9 +66,28 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
   } else {
     Serial.println("- write failed");
   }
+  file.close();
 }
 
-// Delete file to LittleFS
+//Append file
+void appendFile(fs::FS &fs, const char *path, const char *message) {
+  Serial.printf("Appending to file: %s\n", path);
+
+  File file = fs.open(path, FILE_APPEND);
+  if (!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if (file.print(message)) {
+    Serial.println("Message appended");
+  } else {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
+
+// Delete file
 void deleteFile(fs::FS &fs, const char *path) {
   Serial.printf("Deleting file: %s\r\n", path);
   if (fs.remove(path)) {

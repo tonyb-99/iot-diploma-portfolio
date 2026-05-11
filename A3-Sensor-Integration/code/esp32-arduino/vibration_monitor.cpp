@@ -2,7 +2,7 @@
 
 Adafruit_MPU6050 mpu;
 sensors_event_t a, g, temp;
-bool isAbnormal = false;
+// bool isAbnormal = false;
 
 namespace {
   float offsetX = 0, offsetY = 0, offsetZ = 0;
@@ -12,6 +12,7 @@ namespace {
   float bufferY[5];
   float bufferZ[5];
   float avgX = 0, avgY = 0, avgZ = 0;
+  String output = "";
 }
 
 void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t bandwidth, bool debug)
@@ -223,6 +224,22 @@ float getAvgAcceleration_z()
 {
   return avgZ;
 }
+
+// String getRawStringData()
+// {
+//   String buffer = "";
+//   buffer = String(getRawAcceleration_x(), 3) + ", " + String(getRawAcceleration_y(), 3) + ", " + String(getRawAcceleration_z(), 3) + ", ";
+//   return buffer;
+// }
+
+// String getFilteredStringData()
+// {
+//   String buffer = "";
+//   buffer = String(getAvgAcceleration_x(), 3) + ", " + String(getAvgAcceleration_y(), 3) + ", " + String(getAvgAcceleration_z(), 3) + ", ";
+//   return buffer;
+// }
+
+
 
 
 
