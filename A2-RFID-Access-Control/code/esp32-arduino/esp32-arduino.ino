@@ -22,6 +22,7 @@ typedef enum {
   WRITE,
   READ,
   ACCEPT,
+  REJECT,
 } States;
 
 States cardState = States::IDLE;
@@ -145,7 +146,7 @@ void loop() {
 
             startTick = tick;
             //cardDetected = true;
-            cardState = States::INSPECT;
+            cardState = States::INSPECT;    
 
             digitalWrite(R_PIN, LOW);
             digitalWrite(G_PIN, HIGH);
@@ -158,19 +159,11 @@ void loop() {
             Serial.print("PICC type: ");
             MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
             Serial.println(mfrc522.PICC_GetTypeName(piccType));
-            //mfrc522.PICC_HaltA();       // Halt PICC
-            
             playOnTap(SPKR_PIN);
             return;
         }
         case States::INSPECT: 
         {
-            // if(!mfrc522.PICC_ReadCardSerial())
-            // {
-            //     cardState = States::IDLE;
-            //     return;
-            // }
-
             if(tick - startTick > 5)
             {
                 digitalWrite(G_PIN, LOW);
@@ -185,7 +178,7 @@ void loop() {
                 break;
             }
 
-            if(!setupComplete || registerMode)
+            if(!setupComplete)
             {
                 Serial.println("Preparing setup for master keycard ...");
                 cardState = States::SETUP;
@@ -206,10 +199,12 @@ void loop() {
                 }
                 else
                 {
-                cardState = States::IDLE;
-                Serial.print("PCD_Authenticate() failed: ");
-                Serial.println(mfrc522.GetStatusCodeName(status));
-                playDeclined(SPKR_PIN);
+                    cardState = States::IDLE;
+                    Serial.print("PCD_Authenticate() failed: ");
+                    Serial.println(mfrc522.GetStatusCodeName(status));
+                    mfrc522.PICC_HaltA();       // Halt PICC
+                    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                    playDeclined(SPKR_PIN);
                 }
                 break;
 
@@ -258,6 +253,8 @@ void loop() {
             {
                 cardState = States::IDLE;
                 Serial.println("PCD_Authenticate() failed: No default keys found!");
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                 playDeclined(SPKR_PIN);
                 break;
             }
@@ -277,7 +274,7 @@ void loop() {
             byte writeBlock[16];
             byte readSize = sizeof(readBlock);
             byte writeSize = sizeof(writeBlock);
-            std::string text = "";
+            String text = "";
             MFRC522::StatusCode status;
 
 
@@ -302,6 +299,8 @@ void loop() {
                 cardState = States::IDLE;
                 Serial.print("MIFARE_Write() failed: ");
                 Serial.println(mfrc522.GetStatusCodeName(status));
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                 playDeclined(SPKR_PIN);
                 break;
             }
@@ -315,7 +314,7 @@ void loop() {
 
                 // Overwrite default key in trailer block
                 text = "MASTER";
-                memcpy(writeBlock, text.c_str(), text.size() + 1);      // Include the null terminator '\0'
+                memcpy(writeBlock, text.c_str(), text.length() + 1);      // Include the null terminator '\0'
                 Serial.println("Data to write: ");
                 dump_byte_array(writeBlock, writeSize);
                 Serial.println();
@@ -325,6 +324,8 @@ void loop() {
                     cardState = States::IDLE;
                     Serial.print("MIFARE_Write() failed: ");
                     Serial.println(mfrc522.GetStatusCodeName(status));
+                    mfrc522.PICC_HaltA();       // Halt PICC
+                    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                     playDeclined(SPKR_PIN);
                     break;
                 }
@@ -343,7 +344,7 @@ void loop() {
             byte dataAddress = 2;
             byte buffer[18];
             byte blockSize = sizeof(buffer);
-            std::string text = "MASTER";
+            String text = "MASTER";
             bool isMaster = false;
             MFRC522::StatusCode status;
 
@@ -354,13 +355,15 @@ void loop() {
                 cardState = States::IDLE;
                 Serial.print("MIFARE_Read() failed: ");
                 Serial.println(mfrc522.GetStatusCodeName(status));
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                 playDeclined(SPKR_PIN);
                 break;
             }
 
             byte count = 0;
             // Check datablock
-            for(byte i = 0; i < text.size(); i++)
+            for(byte i = 0; i < text.length(); i++)
             {
                 if(text.c_str()[i] != buffer[i])
                 {
@@ -370,7 +373,7 @@ void loop() {
             }
 
             // If contains label master, toggle bool to allow card registration until tagged off
-            isMaster = count == text.size();
+            isMaster = count == text.length();
             if(isMaster)
             {
                 cardState = States::IDLE;
@@ -412,6 +415,10 @@ void loop() {
             // }
             break;
         }
+        // case States::REJECT:
+        // {
+        //     break;
+        // }
     }
 }
 
