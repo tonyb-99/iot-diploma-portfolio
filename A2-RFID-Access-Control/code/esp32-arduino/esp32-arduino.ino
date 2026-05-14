@@ -33,7 +33,7 @@ unsigned long tick = 0;
 unsigned long lastTick = -1;
 unsigned long startTick = 0;
 
-const char* passKey = "/passKey.txt";
+const char* uidFile = "/uids.csv";
 const bool debug = true;
 bool cardDetected = false;
 bool playedSFX = false;
@@ -102,6 +102,17 @@ void setup()
   Serial.println();
 
   initLittleFS();
+  File file = fs.open(uidFile);
+  if(!file || file.isDirectory())
+  {
+    String values = "";
+    for(int i = 0; i < TABLESIZE; i++)
+    {
+        values += "00000000\n";
+    }
+    writeFile(LittleFS, uidFile, values.c_str());
+  }
+  file.close();
 
   Serial.println("Tap to begin ...");
 }
@@ -185,30 +196,34 @@ void loop() {
                 break;
             }
 
+
+            // If uid does not exists but is in register mode skip to setup
+            if(!testUid(mfrc522.uid.uidByte) && registerMode)
+            {
+                cardState = States::SETUP;
+                Serial.println("Assigning new card ...");
+                break;
+            }
+            
+            
+            // Otherwise process authentication
+
+
+
+            // THIS CURRENTLY ONLY WORKS FOR MASTER KEY CARD
             byte buffer[18];
             byte block = 0;
             MFRC522::StatusCode status;
-
             status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
             if(status != MFRC522::StatusCode::STATUS_OK)
             {
-                if(setupComplete && registerMode)
-                {
-                    cardState = States::SETUP;
-                    Serial.println("Assigning new card ...");
-                }
-                else
-                {
-                    cardState = States::IDLE;
-                    Serial.print("PCD_Authenticate() failed: ");
-                    Serial.println(mfrc522.GetStatusCodeName(status));
-                    mfrc522.PICC_HaltA();       // Halt PICC
-                    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
-                    playDeclined(SPKR_PIN);
-                }
+                cardState = States::IDLE;
+                Serial.print("PCD_Authenticate() failed: ");
+                Serial.println(mfrc522.GetStatusCodeName(status));
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                playDeclined(SPKR_PIN);
                 break;
-
-                
             }
             else
             {
@@ -283,11 +298,6 @@ void loop() {
             dump_byte_array(readBlock, readSize);
             Serial.println();
             memcpy(readBlock, key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
-            // for(byte i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
-            // {
-            //     readBlock[i] = key.keyByte[i];
-            // }
-
             Serial.println("After: ");
             dump_byte_array(readBlock, readSize);
             Serial.println();
@@ -333,10 +343,14 @@ void loop() {
                 setupCompleted();
             }
             
+
+            // Write to csv file
+
+
+
             cardState = States::IDLE;
             mfrc522.PICC_HaltA();
             mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
-
             break;
         }
         case States::READ: 
@@ -448,7 +462,7 @@ bool try_key(MFRC522::MIFARE_Key *key)
     Serial.println(F("Authenticating using key A..."));
     status = mfrc522.PCD_Authenticate(MFRC522::PICC_Command::PICC_CMD_MF_AUTH_KEY_A, block, key, &(mfrc522.uid));
     if (status != MFRC522::StatusCode::STATUS_OK) {
-        Serial.print(F("PCD_Authenticate() failed: "));
+        Serial.print("PCD_Authenticate() failed: ");
         Serial.println(mfrc522.GetStatusCodeName(status));
         return false;
     }
@@ -457,17 +471,17 @@ bool try_key(MFRC522::MIFARE_Key *key)
     byte byteCount = sizeof(buffer);
     status = mfrc522.MIFARE_Read(block, buffer, &byteCount);
     if (status != MFRC522::StatusCode::STATUS_OK) {
-        Serial.print(F("MIFARE_Read() failed: "));
+        Serial.print("MIFARE_Read() failed: ");
         Serial.println(mfrc522.GetStatusCodeName(status));
     }
     else {
         // Successful read
         result = true;
-        Serial.print(F("Success with key:"));
+        Serial.print("Success with key:");
         dump_byte_array((*key).keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
         Serial.println();
         // Dump block data
-        Serial.print(F("Block ")); Serial.print(block); Serial.print(F(":"));
+        Serial.print("Block "); Serial.print(block); Serial.print(F(":"));
         dump_byte_array(buffer, 16);
         Serial.println();
     }
@@ -486,4 +500,113 @@ void setupCompleted()
     prefs.putBool("setup", true);
     Serial.println("Setup has been completed!");
     prefs.end();
+}
+
+int uidHash(byte* uidByte)
+{
+    int hash = 0;
+    for(int i = 0; i < 8; i++)
+    {
+        hash = (hash * 31) + uidByte[i];
+    }
+    return hash;
+}
+
+int uidIndex(byte* uidByte)
+{
+    return uidHash(uidByte) % TABLESIZE;
+}
+
+
+// May not need to store hash, but just ids
+void getUserFileContent(String* content, byte* uid, int size = 2, bool debug = false)
+{
+    String line = readLine(LittleFS, uidFile, uidIndex(uid), true);
+    if(line == "")
+    {
+        Serial.println("Failed to retrieve user uid content!");
+        return;
+    }
+
+    int comma =  line.indexOf(',');
+    String id = line.substring(0, comma);
+    String hash = line.substring(comma);
+    content = new String(size);
+    content[0] = id;
+    content[1] = hash;
+
+    if(debug)
+    {
+        Serial.printf("UID: %s || Hash: %s\n", id, hash);
+    }
+}
+
+bool testUID(byte* uid, bool debug = false)
+{
+    String line = readLine(LittleFS, uidFile, uidIndex(uid), true);
+    if(line == "")
+    {
+        Serial.println("Failed to retrieve user uid content!");
+        return false;
+    }
+
+    for(byte i = 0; i < 8; i++)
+    {
+        if(line.c_str()[i] != uid[i])
+        {
+            return false;
+        }
+    }
+
+    if(debug)
+    {
+        Serial.printf("UID: %s", line);
+    }
+    return true;
+}
+
+
+bool uidFinder(byte* uid)
+{
+    String* content;
+    getUserFileContent(content, uid);
+    String id =  content[0];
+    for(byte i = 0; i < 8; i++)
+    {
+        if(id.c_str()[i] != uid[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool hashCheck(byte* uid)
+{
+    String* content;
+    getUserFileContent(content, uid);
+    String hash =  content[1];
+    return hash.toInt() == uidHash(uid);
+}
+
+void addUID(byte* uid)
+{
+    // Note that once index is found need to multiply by uid length to get cursor position (ignores new line key)
+    File file = fs.open(uidFile, "r+");
+    int index = uidIndex(uid);
+    int position = index * 8;
+    file.seek(position); // Length of uid = 8
+    String line = file.readStringUntil("\n");
+    if(line == "00000000")
+    {
+        file.seek(position);
+        file.write(uid, 8);
+    }
+    file.close();
+}
+
+void removeUID(byte* uid)
+{
+
 }
