@@ -55,7 +55,7 @@ byte knownKeys[NR_KNOWN_KEYS][MFRC522::MIFARE_Misc::MF_KEY_SIZE] =  {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}  // 00 00 00 00 00 00
 };
 
-
+bool testUID(byte* uid, bool debug);
 // Assume the first card is the master key which enables privilege to register new cards until tagged off.
 
 void setup()
@@ -102,13 +102,14 @@ void setup()
   Serial.println();
 
   initLittleFS();
-  File file = fs.open(uidFile);
+  File file = LittleFS.open(uidFile);
   if(!file || file.isDirectory())
   {
     String values = "";
     for(int i = 0; i < TABLESIZE; i++)
     {
         values += "00000000\n";
+        // file.println("00000000");
     }
     writeFile(LittleFS, uidFile, values.c_str());
   }
@@ -197,20 +198,21 @@ void loop() {
             }
 
 
+            // registerUID(mfrc522.uid.uidByte);
+            // break;
             // If uid does not exists but is in register mode skip to setup
-            if(!testUid(mfrc522.uid.uidByte) && registerMode)
+            if(!testUID(mfrc522.uid.uidByte, true) && registerMode)
             {
+                //registerUID(mfrc522.uid.uidByte);
                 cardState = States::SETUP;
                 Serial.println("Assigning new card ...");
                 break;
             }
             
+
             
             // Otherwise process authentication
 
-
-
-            // THIS CURRENTLY ONLY WORKS FOR MASTER KEY CARD
             byte buffer[18];
             byte block = 0;
             MFRC522::StatusCode status;
@@ -281,7 +283,7 @@ void loop() {
 
             break;
         }
-        case States::WRITE:     //Assign?
+        case States::WRITE:     //Assign? //Registration?
         {
             byte trailerAddress = 3;
             byte dataAddress = 2;
@@ -316,44 +318,49 @@ void loop() {
             }
             else
             {
+                // Write to csv file
+                registerUID(mfrc522.uid.uidByte);
                 Serial.println("Factory key overwritten!");
             }
 
             if(!setupComplete)
             {
-
                 // Overwrite default key in trailer block
                 text = "MASTER";
                 memcpy(writeBlock, text.c_str(), text.length() + 1);      // Include the null terminator '\0'
                 Serial.println("Data to write: ");
                 dump_byte_array(writeBlock, writeSize);
                 Serial.println();
-                status = mfrc522.MIFARE_Write(dataAddress, writeBlock, writeSize);
-                if(status != MFRC522::StatusCode::STATUS_OK)
-                {
-                    cardState = States::IDLE;
-                    Serial.print("MIFARE_Write() failed: ");
-                    Serial.println(mfrc522.GetStatusCodeName(status));
-                    mfrc522.PICC_HaltA();       // Halt PICC
-                    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
-                    playDeclined(SPKR_PIN);
-                    break;
-                }
-                Serial.println("Write successful!");
+            }
+
+            // By default replace datablock at the address (either empty or with tag)
+            status = mfrc522.MIFARE_Write(dataAddress, writeBlock, writeSize);
+            if(status != MFRC522::StatusCode::STATUS_OK)
+            {
+                cardState = States::IDLE;
+                Serial.print("MIFARE_Write() failed: ");
+                Serial.println(mfrc522.GetStatusCodeName(status));
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                playDeclined(SPKR_PIN);
+                break;
+            }
+            if(text != "")
+            {
+                Serial.printf("Write successful at address (%i)!\n", dataAddress);
                 setupCompleted();
             }
-            
-
-            // Write to csv file
-
-
+            else
+            {
+                Serial.printf("Cleared data block at addres (%i)!\n", dataAddress);
+            }
 
             cardState = States::IDLE;
             mfrc522.PICC_HaltA();
             mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
             break;
         }
-        case States::READ: 
+        case States::READ:      //Extract?  //Modify?
         {
             byte dataAddress = 2;
             byte buffer[18];
@@ -408,14 +415,59 @@ void loop() {
                 break;
             }
 
+            // Deregister key card from register
+            if(!isMaster && registerMode)
+            {
+                deregisterUID(mfrc522.uid.uidByte);
+                mfrc522.PICC_HaltA();       // Halt PICC
+                mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                cardState = States::IDLE;       // TEMP
+                break;
+            }
                 
-            // Check datablock for hash key
-                // If none, create a hash and save to file.
-                // If exists, clear uid at hash value & empty the data block
+            if(!isMaster && !registerMode)
+            {
+                byte writeBlock[16];
+                byte writeSize = sizeof(writeBlock);
+                int hashValue = uidHash(mfrc522.uid.uidByte);
+                // If none, create a hash and save to card
+                if(isBlockEmpty(buffer))
+                {
+                    memcpy(writeBlock, &hashValue, sizeof(hashValue));
+                    status = mfrc522.MIFARE_Write(dataAddress, writeBlock, writeSize);
+                }
+                else
+                {
+                    int storedHash;
+                    memcpy(&storedHash, buffer, sizeof(storedHash));
+                    // If exists, clear uid at hash value & empty the data block
+                    if(hashValue != storedHash)
+                    {
+                        Serial.println("Hash values do not match!");
+                        cardState = States::IDLE;       
+                        break;
+                    }
+                    status = mfrc522.MIFARE_Write(dataAddress, writeBlock, writeSize);
+                    if(status != MFRC522::StatusCode::STATUS_OK)
+                    {
+                        cardState = States::IDLE;
+                        Serial.print("MIFARE_Write() failed: ");
+                        Serial.println(mfrc522.GetStatusCodeName(status));
+                        mfrc522.PICC_HaltA();       // Halt PICC
+                        mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                        playDeclined(SPKR_PIN);
+                        break;
+                    }
+                    Serial.printf("Reset hash at datablock (%i)\n", dataAddress);
+                    cardState = States::ACCEPT;       
+                    playSuccess(SPKR_PIN);
+                    break;
+                }
+            }
 
-
-            
-            cardState = States::IDLE;       // TEMP
+            cardState = States::IDLE;  
+            mfrc522.PICC_HaltA();       // Halt PICC
+            mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
             break;
             
         }
@@ -427,6 +479,10 @@ void loop() {
             //     cardState = States::IDLE;
             //     return;
             // }
+            Serial.println("TESTING: CURRENTLY ACCEPTING!!! RETURNING TO IDLE");
+            cardState = States::IDLE;
+            mfrc522.PICC_HaltA();       // Halt PICC
+            mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
             break;
         }
         // case States::REJECT:
@@ -505,11 +561,11 @@ void setupCompleted()
 int uidHash(byte* uidByte)
 {
     int hash = 0;
-    for(int i = 0; i < 8; i++)
+    for(int i = 0; i < mfrc522.uid.size; i++)
     {
         hash = (hash * 31) + uidByte[i];
     }
-    return hash;
+    return abs(hash);
 }
 
 int uidIndex(byte* uidByte)
@@ -541,7 +597,7 @@ void getUserFileContent(String* content, byte* uid, int size = 2, bool debug = f
     }
 }
 
-bool testUID(byte* uid, bool debug = false)
+bool testUID(byte* uid, bool debug)
 {
     String line = readLine(LittleFS, uidFile, uidIndex(uid), true);
     if(line == "")
@@ -550,8 +606,12 @@ bool testUID(byte* uid, bool debug = false)
         return false;
     }
 
-    for(byte i = 0; i < 8; i++)
+    for(byte i = 0; i < mfrc522.uid.size; i++)
     {
+        if(debug)
+        {
+            Serial.printf("Line[%i]: %c || uid[%i]: %c\n", i, line.c_str()[i], i, uid[i]);
+        }
         if(line.c_str()[i] != uid[i])
         {
             return false;
@@ -571,7 +631,7 @@ bool uidFinder(byte* uid)
     String* content;
     getUserFileContent(content, uid);
     String id =  content[0];
-    for(byte i = 0; i < 8; i++)
+    for(byte i = 0; i < mfrc522.uid.size; i++)
     {
         if(id.c_str()[i] != uid[i])
         {
@@ -590,23 +650,59 @@ bool hashCheck(byte* uid)
     return hash.toInt() == uidHash(uid);
 }
 
-void addUID(byte* uid)
+bool isBlockEmpty(byte* buffer)
+{
+    bool isEmpty = true;
+    for(byte i = 0; i < sizeof(buffer); i++)
+    {
+        if(buffer[i] != 0x00)
+        {
+            isEmpty = false;
+            break;
+        }
+    }
+    return isEmpty;
+}
+
+
+// bool idAvailable(byte* uid)
+
+void registerUID(byte* uid)
 {
     // Note that once index is found need to multiply by uid length to get cursor position (ignores new line key)
-    File file = fs.open(uidFile, "r+");
+    File file = LittleFS.open(uidFile, "r+");
     int index = uidIndex(uid);
-    int position = index * 8;
-    file.seek(position); // Length of uid = 8
-    String line = file.readStringUntil("\n");
+    // int position = index * (mfrc522.uid.size + 1);
+    int position = index * 9;
+    file.seek(position); 
+    String line = file.readStringUntil('\n');
     if(line == "00000000")
     {
         file.seek(position);
         file.write(uid, 8);
     }
+    else
+    {
+        Serial.printf("Unable to overwrite existing UID: %s\n", line);
+    }
     file.close();
 }
 
-void removeUID(byte* uid)
-{
 
+void deregisterUID(byte* uid)
+{
+    // This needs to restore factory key otherwise it becomes bricked!!!
+    File file = LittleFS.open(uidFile, "r+");
+    int index = uidIndex(uid);
+    // int position = index * (mfrc522.uid.size + 1);
+    int position = index * 9;
+    file.seek(position); 
+    String line = file.readStringUntil('\n');
+    if(line != "00000000")
+    {
+        file.seek(position);
+        file.write((const uint8_t*)"00000000", 8);
+        Serial.println("UID has been deregistered!");
+    }
+    file.close();
 }

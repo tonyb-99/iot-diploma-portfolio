@@ -53,7 +53,7 @@ String readLine(fs::FS &fs, const char * path, int index, bool debug)
 
   if(debug)
   {
-    if(contents != "") { Serial.printf("Retrieved contents at line %i\n", index); }
+    if(contents != "") { Serial.printf("Retrieved contents at line %i: %s\n", index, contents); }
     else  { Serial.println("Could not retrieve user data!"); }
   }
   file.close();
