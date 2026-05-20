@@ -198,9 +198,9 @@ void loop() {
             }
 
 
-            // registerUID(mfrc522.uid.uidByte);
-            // break;
             // If uid does not exists but is in register mode skip to setup
+
+
             if(!testUID(mfrc522.uid.uidByte, true) && registerMode)
             {
                 //registerUID(mfrc522.uid.uidByte);
@@ -231,7 +231,17 @@ void loop() {
             {
                 Serial.println("Keys match! Now reading ...");
                 cardState = States::READ;
-                playSuccess(SPKR_PIN);
+
+                // //TEMP RESETS
+                // registerMode = true;
+                // cardState = States::IDLE;
+                // Serial.println("Resetting key card to defaults!");
+                // deregisterUID(mfrc522.uid.uidByte);
+                // clearBlock(2);
+                // writeToTrailer(knownKeys[0]);
+                // mfrc522.PICC_HaltA();       // Halt PICC
+                // mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                // break;
             }
 
             break;
@@ -294,7 +304,7 @@ void loop() {
             String text = "";
             MFRC522::StatusCode status;
 
-
+            // Overwrite address with new key, keeping other elements the same
             mfrc522.MIFARE_Read(trailerAddress, readBlock, &readSize);
             Serial.println("Before: ");
             dump_byte_array(readBlock, readSize);
@@ -304,7 +314,7 @@ void loop() {
             dump_byte_array(readBlock, readSize);
             Serial.println();
 
-
+            // Write key to trailer address
             status = mfrc522.MIFARE_Write(trailerAddress, readBlock, writeSize);
             if(status != MFRC522::StatusCode::STATUS_OK)
             {
@@ -323,6 +333,7 @@ void loop() {
                 Serial.println("Factory key overwritten!");
             }
 
+            // FOR SETUP OF MASTER KEY CARD ONLY
             if(!setupComplete)
             {
                 // Overwrite default key in trailer block
@@ -333,7 +344,7 @@ void loop() {
                 Serial.println();
             }
 
-            // By default replace datablock at the address (either empty or with tag)
+            // By default replace datablock at the address (empty for non-master key cards)
             status = mfrc522.MIFARE_Write(dataAddress, writeBlock, writeSize);
             if(status != MFRC522::StatusCode::STATUS_OK)
             {
@@ -388,6 +399,7 @@ void loop() {
             {
                 if(text.c_str()[i] != buffer[i])
                 {
+                    Serial.printf("%i: %c\n", i, text.c_str()[i]);
                     break;
                 }
                 count++;
@@ -415,10 +427,15 @@ void loop() {
                 break;
             }
 
-            // Deregister key card from register
+            // Deregister key card from register (NOTE: CARD HAS ALREADY BEEN DETECTED ON LIST)
             if(!isMaster && registerMode)
             {
-                deregisterUID(mfrc522.uid.uidByte);
+                deregisterUID(mfrc522.uid.uidByte);     // Remove card uid from list
+                // Reset to factory key in trailer address
+                writeToTrailer(knownKeys[0]);
+                // Reset datablock for sign in
+                clearBlock(2);
+
                 mfrc522.PICC_HaltA();       // Halt PICC
                 mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                 cardState = States::IDLE;       // TEMP
@@ -430,11 +447,29 @@ void loop() {
                 byte writeBlock[16];
                 byte writeSize = sizeof(writeBlock);
                 int hashValue = uidHash(mfrc522.uid.uidByte);
+
                 // If none, create a hash and save to card
                 if(isBlockEmpty(buffer))
                 {
                     memcpy(writeBlock, &hashValue, sizeof(hashValue));
                     status = mfrc522.MIFARE_Write(dataAddress, writeBlock, writeSize);
+                    if(status != MFRC522::StatusCode::STATUS_OK)
+                    {
+                        cardState = States::IDLE;
+                        Serial.print("MIFARE_Write() failed: ");
+                        Serial.println(mfrc522.GetStatusCodeName(status));
+                        mfrc522.PICC_HaltA();       // Halt PICC
+                        mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                        playDeclined(SPKR_PIN);
+                        break;
+                    }
+                    Serial.println("Hash successfully written to datablock!");
+                    cardState = States::IDLE;       
+                    mfrc522.PICC_HaltA();       // Halt PICC
+                    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+                    playSuccess(SPKR_PIN);
+                    break;
+
                 }
                 else
                 {
@@ -458,8 +493,10 @@ void loop() {
                         playDeclined(SPKR_PIN);
                         break;
                     }
-                    Serial.printf("Reset hash at datablock (%i)\n", dataAddress);
-                    cardState = States::ACCEPT;       
+                    Serial.printf("Reset hash at datablock (%i)\n", dataAddress);       // CURRENTLY RUNS EVERY TIME
+                    cardState = States::IDLE;       
+                    mfrc522.PICC_HaltA();       // Halt PICC
+                    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
                     playSuccess(SPKR_PIN);
                     break;
                 }
@@ -705,4 +742,85 @@ void deregisterUID(byte* uid)
         Serial.println("UID has been deregistered!");
     }
     file.close();
+}
+
+void writeToTrailer(byte* key)
+{
+    byte trailerAddress = 3;
+    byte readBlock[18];
+    byte readSize = sizeof(readBlock);
+    
+    // Overwrite address with new key, keeping other elements the same
+    mfrc522.MIFARE_Read(trailerAddress, readBlock, &readSize);
+    memcpy(readBlock, key, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+
+    // Write key to trailer address
+    MFRC522::StatusCode status = mfrc522.MIFARE_Write(trailerAddress, readBlock, readSize - 2);
+    if(status != MFRC522::StatusCode::STATUS_OK)
+    {
+        cardState = States::IDLE;
+        Serial.print("MIFARE_Write() failed: ");
+        Serial.println(mfrc522.GetStatusCodeName(status));
+        Serial.println("Failed to overwrite trailer address!");
+        mfrc522.PICC_HaltA();       // Halt PICC
+        mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+        playDeclined(SPKR_PIN);
+        return;
+    }
+    Serial.println("Successfully overwridden trailer address!");
+    dump_byte_array(readBlock, readSize);
+    Serial.println();
+}
+
+void clearBlock(byte address)
+{
+    byte writeBlock[16];
+    byte writeSize = sizeof(writeBlock);
+    MFRC522::StatusCode status = status = mfrc522.MIFARE_Write(address, writeBlock, writeSize);
+    if(status != MFRC522::StatusCode::STATUS_OK)
+    {
+        cardState = States::IDLE;
+        Serial.print("MIFARE_Write() failed: ");
+        Serial.println(mfrc522.GetStatusCodeName(status));
+        Serial.printf("Datablock [%i] failed to clear!\n", address);
+        mfrc522.PICC_HaltA();       // Halt PICC
+        mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+        playDeclined(SPKR_PIN);
+        return;
+    }
+    Serial.printf("Datablock [%i] cleared successfully!\n", address);
+    //return;
+}
+
+void writeToDataBlock(byte address, String data)
+{
+    // // Clear block as leftover values may be carried over
+    // clearBlock(address);   
+    byte writeBlock[16];
+    byte dataSize = sizeof(data.c_str());
+    if(dataSize > sizeof(writeBlock))
+    {
+        Serial.println("Data exceeded write block max size! ");
+        mfrc522.PICC_HaltA();       // Halt PICC
+        mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+        playDeclined(SPKR_PIN);
+        return;
+    }
+
+    memcpy(writeBlock, data.c_str(), dataSize + 1);
+    MFRC522::StatusCode status = status = mfrc522.MIFARE_Write(address, writeBlock, sizeof(writeBlock));
+    if(status != MFRC522::StatusCode::STATUS_OK)
+    {
+        cardState = States::IDLE;
+        Serial.print("MIFARE_Write() failed: ");
+        Serial.println(mfrc522.GetStatusCodeName(status));
+        Serial.printf("Datablock [%i] failed to write!\n", address);
+        mfrc522.PICC_HaltA();       // Halt PICC
+        mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
+        playDeclined(SPKR_PIN);
+        return;
+    }
+    Serial.printf("Wrote to Datablock [%i] successfully!\n", address);
+    //return;
+    
 }
