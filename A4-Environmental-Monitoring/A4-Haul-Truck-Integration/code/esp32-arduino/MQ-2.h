@@ -3,8 +3,12 @@
 
 #include <Arduino.h>
 
-void initMQ2();
-void initMQ2Interrupt();
-void calibrate();
+void initMQ2(uint8_t analogPin);
+void calibrateMQ2(bool debug = false);
+float stableAir();
+float gasVolume();
+bool presenceOfGas();
+void detectGas(bool debug = false);
+void checkGasLevel(bool debug = false);
 
 #endif
