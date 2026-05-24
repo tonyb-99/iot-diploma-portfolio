@@ -1,10 +1,14 @@
+// Assisted with AI: https://chatgpt.com/share/6a1273ad-4c5c-83ec-9596-9190cc3ebc09
+
 #include "MQ-2.h"
 
 namespace{
   uint8_t mq2Pin;
-  float avgAir;
-  float avgGas;
+  float defaultRo = 5;
+  float rS_air;
+  float rS_gas;
   float rO;
+  const float gasThreshold = 7;
   bool gasDetected = false;
 }
 
@@ -27,45 +31,69 @@ void calibrateMQ2(bool debug)
     sum += analogRead(mq2Pin);
     delay(2000);
   }
-  avgAir = sum / size;
-  avgAir /= 4095;
+  float avgRead = sum / size;
+
+  /******************AI Assisted********************/
+  // Find Rs & Ro of air
+  float voltage = avgRead / 4095 * 3.3;
+  voltage *= 1.5;
+  rS_air = 5 - voltage;
+  rS_air /= voltage;
+
+  rO = rS_air / 9.8;
+  /*************************************************/
+
+  if(rO < 0.65 * defaultRo || rO > 1.35 * defaultRo)
+  {
+    rO = defaultRo;
+    rS_air = rO * 9.8;
+    if(debug)
+    {
+      Serial.println("Calibration not within range. Using default values ...");
+    }
+  }
+
   if(debug)
   {
-    Serial.printf("Initial Gas volume: %.1f%%\n", avgAir);
+    Serial.printf("Analog value = %f\n", avgRead);
+    Serial.printf("Rs / Ro = %.2f / %.2f = %.2f\n", rS_air, rO, rS_air / rO);
   }
 }
   
-float stableAir()
+float gasResistanceRatio()
 {
-  return avgAir;
+  return rS_gas / rO;
 }
-
-float gasVolume()
-{
-  return avgGas;
-}
-
 
 bool presenceOfGas()
 {
   return gasDetected;
 }
 
+
 void detectGas(bool debug)
 {
-  avgGas = 0;
+  float avgRead = 0;
   int sampleSize = 5;
   for(int i = 0; i < sampleSize; i++)
   {
-    avgGas += analogRead(mq2Pin);
+    avgRead += analogRead(mq2Pin);
     delay(200);     // 5 times per second
   }
-  avgGas /= sampleSize;
-  Serial.printf("Analog value = %f\n", avgGas);
-  avgGas /= 4095;
+  avgRead /= sampleSize;
+
+  /******************AI Assisted********************/
+  // Find Rs of gas in the air.
+  float voltage = avgRead / 4095 * 3.3;
+  voltage *= 1.5;
+  rS_gas = 5 - voltage;
+  rS_gas /= voltage;
+  /*************************************************/
+
   if(debug)
   {
-    Serial.printf("Gas volume: %.1f%%\n", avgGas);
+    Serial.printf("Analog value = %f\n", avgRead);
+    Serial.printf("Rs / Ro = %.2f / %.2f = %.2f\n", rS_gas, rO, rS_gas / rO);
   }
   checkGasLevel(debug);
 }
@@ -73,7 +101,7 @@ void detectGas(bool debug)
  
 void checkGasLevel(bool debug)
 {
-  if(avgGas > 0.4)
+  if(gasResistanceRatio() < gasThreshold)
   {
     gasDetected = true;
   }

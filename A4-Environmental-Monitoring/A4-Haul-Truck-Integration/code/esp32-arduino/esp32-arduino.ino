@@ -15,14 +15,14 @@
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  // initDHT11(DHTPIN);
+  initDHT11(DHTPIN);
   initMQ2(MQ2PIN);
   calibrateMQ2(true);
 }
 
 void loop() {
-  // getTemperature(true);
-  // getHumidity(true);
-  detectGas(false);
+  getTemperature(true);
+  getHumidity(true);
+  detectGas(true);
   delay(3000);
 }
