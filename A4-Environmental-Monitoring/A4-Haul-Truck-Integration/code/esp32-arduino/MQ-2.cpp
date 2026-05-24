@@ -3,24 +3,36 @@
 #include "MQ-2.h"
 
 namespace{
-  uint8_t mq2Pin;
+  uint8_t mq2Pin_A;
+  uint8_t mq2Pin_D;
   float defaultRo = 5;
   float rS_air;
   float rS_gas;
   float rO;
   const float gasThreshold = 7;
-  bool gasDetected = false;
+  volatile bool gasDetected = false;
 }
 
+// For instantaneous detection. State will change if analogue read decreases.
+void IRAM_ATTR gasISR()
+{
+  gasDetected = true;
+}
 
 void initMQ2(uint8_t analogPin)
 {
-  mq2Pin = analogPin;
-  pinMode(mq2Pin, INPUT);
+  mq2Pin_A = analogPin;
+  pinMode(mq2Pin_A, INPUT);
   Serial.println("Preparing MQ2 sensor (~ 20 seconds)");
   delay(20 * 1000); // Delay 2 minutes to warm up sensor
 }
 
+void initMQ2ISR(uint8_t digitalPin)
+{
+  mq2Pin_D = digitalPin;
+  attachInterrupt(digitalPinToInterrupt(mq2Pin_D), gasISR, FALLING);
+  Serial.println("MQ2 ISR initialised.");
+}
 
 void calibrateMQ2(bool debug)
 {
@@ -28,7 +40,7 @@ void calibrateMQ2(bool debug)
   int size = 5;
   for(int i = 0; i < size; i++)
   {
-    sum += analogRead(mq2Pin);
+    sum += analogRead(mq2Pin_A);
     delay(2000);
   }
   float avgRead = sum / size;
@@ -77,7 +89,7 @@ void detectGas(bool debug)
   int sampleSize = 5;
   for(int i = 0; i < sampleSize; i++)
   {
-    avgRead += analogRead(mq2Pin);
+    avgRead += analogRead(mq2Pin_A);
     delay(200);     // 5 times per second
   }
   avgRead /= sampleSize;

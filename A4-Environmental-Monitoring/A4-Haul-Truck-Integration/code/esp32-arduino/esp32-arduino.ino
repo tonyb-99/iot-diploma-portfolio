@@ -10,6 +10,7 @@
 
 #define DHTPIN 2
 #define MQ2PIN 13
+#define ISRPIN 12
 
 
 void setup() {
@@ -17,6 +18,7 @@ void setup() {
   Serial.begin(9600);
   initDHT11(DHTPIN);
   initMQ2(MQ2PIN);
+  initMQ2ISR(ISRPIN);
   calibrateMQ2(true);
 }
 

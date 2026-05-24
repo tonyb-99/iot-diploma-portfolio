@@ -3,7 +3,9 @@
 
 #include <Arduino.h>
 
+void IRAM_ATTR gasISR();
 void initMQ2(uint8_t analogPin);
+void initMQ2ISR(uint8_t digitalPin);
 void calibrateMQ2(bool debug = false);
 float gasResistanceRatio();
 bool presenceOfGas();
