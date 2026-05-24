@@ -1,6 +1,7 @@
 #include "DHT11.h"
 #include "MQ-2.h"
 #include "clock.h"
+#include "display.h"
 #include <Arduino.h>
 
 // Humidity sensor: https://randomnerdtutorials.com/esp32-dht11-dht22-temperature-humidity-sensor-arduino-ide/
@@ -21,7 +22,10 @@ void setup() {
   // initMQ2(MQ2PIN);
   // initMQ2ISR(MQ2ISR);
   // calibrateMQ2(true);
-  initRTC();
+  // initRTC();
+  initDisplay();
+  String text = "Hello world";
+  displayText(text);
 }
 
 void loop() {
@@ -30,9 +34,9 @@ void loop() {
   // detectGas(true);
   // delay(3000);
 
-  Serial.printf("Timestamp: %s\n", getTimestamp());
-  Serial.printf("Date: %s\n", getDate());
-  Serial.printf("Day: %s\n", getDay());
-  Serial.printf("Day (full): %s\n", getDay(false));
-  delay(2000);
+  // Serial.printf("Timestamp: %s\n", getTimestamp());
+  // Serial.printf("Date: %s\n", getDate());
+  // Serial.printf("Day: %s\n", getDay());
+  // Serial.printf("Day (full): %s\n", getDay(false));
+  // delay(2000);
 }
