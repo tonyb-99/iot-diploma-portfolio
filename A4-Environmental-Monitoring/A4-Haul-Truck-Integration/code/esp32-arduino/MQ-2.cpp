@@ -122,6 +122,14 @@ void checkGasLevel(bool debug)
     gasDetected = false;
   }
 
+
+  /**********************WIP**********************/
+  if(gasDetected)
+  {
+    // Play alert and warning
+  }
+  /***********************************************/
+
   if(debug)
   {
     Serial.printf("Gas detected: %s\n", gasDetected ? "TRUE" : "FALSE");
