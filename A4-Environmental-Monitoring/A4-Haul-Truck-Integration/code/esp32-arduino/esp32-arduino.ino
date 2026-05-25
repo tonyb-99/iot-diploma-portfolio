@@ -2,6 +2,7 @@
 #include "MQ-2.h"
 #include "clock.h"
 #include "display.h"
+#include "SG90-Servo.h"
 #include <Arduino.h>
 
 // Humidity sensor: https://randomnerdtutorials.com/esp32-dht11-dht22-temperature-humidity-sensor-arduino-ide/
@@ -13,19 +14,19 @@
 #define DHTPIN 2
 #define MQ2PIN 13
 #define MQ2ISR 12
+#define SERVOPIN 27
 
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  // initDisplay();
   // initDHT11(DHTPIN);
   // initMQ2(MQ2PIN);
   // initMQ2ISR(MQ2ISR);
   // calibrateMQ2(true);
   // initRTC();
-  initDisplay();
-  String text = "Hello world";
-  displayText(text);
+  initServo(SERVOPIN);
 }
 
 void loop() {
@@ -39,4 +40,11 @@ void loop() {
   // Serial.printf("Day: %s\n", getDay());
   // Serial.printf("Day (full): %s\n", getDay(false));
   // delay(2000);
+  rotate(90, 15, true);
+  delay(1000);
+  rotate(180, 15, true);
+  delay(1000);
+  rotate(0, 15, true);
+  delay(1000);
+
 }
