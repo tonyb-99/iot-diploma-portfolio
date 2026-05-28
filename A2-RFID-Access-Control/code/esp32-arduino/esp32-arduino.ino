@@ -35,7 +35,6 @@ unsigned long startTick = 0;
 
 const char* uidFile = "/uids.csv";
 const bool debug = true;
-bool cardDetected = false;
 bool playedSFX = false;
 bool setupComplete;
 bool registerMode = false;
@@ -55,7 +54,7 @@ byte knownKeys[NR_KNOWN_KEYS][MFRC522::MIFARE_Misc::MF_KEY_SIZE] =  {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}  // 00 00 00 00 00 00
 };
 
-bool testUID(byte* uid, bool debug);
+bool findUID(byte* uid, bool debug);
 // Assume the first card is the master key which enables privilege to register new cards until tagged off.
 
 void setup()
@@ -68,53 +67,9 @@ void setup()
   SPI.begin();
   mfrc522.PCD_Init();
   delay(1000);
-  prefs.begin("rfid", false);
-  //prefs.clear();
-  byte keyData[MFRC522::MIFARE_Misc::MF_KEY_SIZE];
-  size_t len = prefs.getBytesLength("key");
-  Serial.print("Key length: ");
-  Serial.println(len);
-
-  if(len == MFRC522::MIFARE_Misc::MF_KEY_SIZE)
-  {
-    Serial.println("Key exists in memory!");
-    prefs.getBytes("key", key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
-  }
-  else
-  {
-    Serial.println("Generating new key in memory ...");
-    for(byte i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
-    {
-      keyData[i] = (byte)(esp_random() & 0xff);
-      key.keyByte[i] = keyData[i];
-    }
-    prefs.putBytes("key", keyData, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
-
-  }
-  
-  setupComplete = prefs.getBool("setup");
-  if(!setupComplete)
-  {
-    Serial.print("Master key card has not been created yet ...");
-  }
-  prefs.end();
-  dump_byte_array(key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
-  Serial.println();
-
+  initPrefs();
   initLittleFS();
-  File file = LittleFS.open(uidFile);
-  if(!file || file.isDirectory())
-  {
-    String values = "";
-    for(int i = 0; i < TABLESIZE; i++)
-    {
-        values += "00000000\n";
-        // file.println("00000000");
-    }
-    writeFile(LittleFS, uidFile, values.c_str());
-  }
-  file.close();
-
+  initDatabase();
   Serial.println("Tap to begin ...");
 }
 
@@ -157,7 +112,6 @@ void loop() {
             }
 
             startTick = tick;
-            //cardDetected = true;
             cardState = States::INSPECT;    
 
             digitalWrite(R_PIN, LOW);
@@ -199,20 +153,15 @@ void loop() {
 
 
             // If uid does not exists but is in register mode skip to setup
-
-
-            if(!testUID(mfrc522.uid.uidByte, true) && registerMode)
+            if(!findUID(mfrc522.uid.uidByte, true) && registerMode)
             {
-                //registerUID(mfrc522.uid.uidByte);
                 cardState = States::SETUP;
                 Serial.println("Assigning new card ...");
                 break;
             }
             
-
-            
+    
             // Otherwise process authentication
-
             byte buffer[18];
             byte block = 0;
             MFRC522::StatusCode status;
@@ -227,23 +176,9 @@ void loop() {
                 playDeclined(SPKR_PIN);
                 break;
             }
-            else
-            {
-                Serial.println("Keys match! Now reading ...");
-                cardState = States::READ;
 
-                // //TEMP RESETS
-                // registerMode = true;
-                // cardState = States::IDLE;
-                // Serial.println("Resetting key card to defaults!");
-                // deregisterUID(mfrc522.uid.uidByte);
-                // clearBlock(2);
-                // writeToTrailer(knownKeys[0]);
-                // mfrc522.PICC_HaltA();       // Halt PICC
-                // mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
-                // break;
-            }
-
+            Serial.println("Keys match! Now reading ...");
+            cardState = States::READ;
             break;
         }
 
@@ -285,12 +220,8 @@ void loop() {
                 playDeclined(SPKR_PIN);
                 break;
             }
-            else
-            {
-                cardState = States::WRITE;
-            }
 
-
+            cardState = States::WRITE;
             break;
         }
         case States::WRITE:     //Assign? //Registration?
@@ -326,12 +257,11 @@ void loop() {
                 playDeclined(SPKR_PIN);
                 break;
             }
-            else
-            {
-                // Write to csv file
-                registerUID(mfrc522.uid.uidByte);
-                Serial.println("Factory key overwritten!");
-            }
+
+            // Write to csv file
+            registerUID(mfrc522.uid.uidByte);
+            Serial.println("Factory key overwritten!");
+            
 
             // FOR SETUP OF MASTER KEY CARD ONLY
             if(!setupComplete)
@@ -586,6 +516,43 @@ bool try_key(MFRC522::MIFARE_Key *key)
     return result;
 }
 
+
+void initPrefs()
+{
+    prefs.begin("rfid", false);
+  //prefs.clear();
+  byte keyData[MFRC522::MIFARE_Misc::MF_KEY_SIZE];
+  size_t len = prefs.getBytesLength("key");
+  Serial.print("Key length: ");
+  Serial.println(len);
+
+  if(len == MFRC522::MIFARE_Misc::MF_KEY_SIZE)
+  {
+    Serial.println("Key exists in memory!");
+    prefs.getBytes("key", key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+  }
+  else
+  {
+    Serial.println("Generating new key in memory ...");
+    for(byte i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
+    {
+      keyData[i] = (byte)(esp_random() & 0xff);
+      key.keyByte[i] = keyData[i];
+    }
+    prefs.putBytes("key", keyData, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+
+  }
+  
+  setupComplete = prefs.getBool("setup");
+  if(!setupComplete)
+  {
+    Serial.print("Master key card has not been created yet ...");
+  }
+  prefs.end();
+  dump_byte_array(key.keyByte, MFRC522::MIFARE_Misc::MF_KEY_SIZE);
+  Serial.println();
+}
+
 void setupCompleted()
 {
     setupComplete = true;
@@ -593,6 +560,21 @@ void setupCompleted()
     prefs.putBool("setup", true);
     Serial.println("Setup has been completed!");
     prefs.end();
+}
+
+void initDatabase()
+{
+    File file = LittleFS.open(uidFile);
+    if(!file || file.isDirectory())
+    {
+        String values = "";
+        for(int i = 0; i < TABLESIZE; i++)
+        {
+            values += "00000000\n";
+        }
+        writeFile(LittleFS, uidFile, values.c_str());
+    }
+    file.close();
 }
 
 int uidHash(byte* uidByte)
@@ -634,7 +616,7 @@ void getUserFileContent(String* content, byte* uid, int size = 2, bool debug = f
     }
 }
 
-bool testUID(byte* uid, bool debug)
+bool findUID(byte* uid, bool debug)
 {
     String line = readLine(LittleFS, uidFile, uidIndex(uid), true);
     if(line == "")
@@ -659,23 +641,6 @@ bool testUID(byte* uid, bool debug)
     {
         Serial.printf("UID: %s", line);
     }
-    return true;
-}
-
-
-bool uidFinder(byte* uid)
-{
-    String* content;
-    getUserFileContent(content, uid);
-    String id =  content[0];
-    for(byte i = 0; i < mfrc522.uid.size; i++)
-    {
-        if(id.c_str()[i] != uid[i])
-        {
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -789,7 +754,6 @@ void clearBlock(byte address)
         return;
     }
     Serial.printf("Datablock [%i] cleared successfully!\n", address);
-    //return;
 }
 
 void writeToDataBlock(byte address, String data)
@@ -821,6 +785,17 @@ void writeToDataBlock(byte address, String data)
         return;
     }
     Serial.printf("Wrote to Datablock [%i] successfully!\n", address);
-    //return;
     
+}
+
+
+// Can only be used post-authentication
+void factoryResetCard()
+{
+    Serial.println("Resetting key card to defaults!");
+    deregisterUID(mfrc522.uid.uidByte);
+    clearBlock(2);
+    writeToTrailer(knownKeys[0]);
+    mfrc522.PICC_HaltA();       // Halt PICC
+    mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
 }
