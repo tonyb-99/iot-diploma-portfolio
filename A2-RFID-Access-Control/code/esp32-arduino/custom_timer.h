@@ -8,4 +8,9 @@
 // extern unsigned long lastTick;
 extern unsigned long startTick;
 
+void initCustomTimer(bool debug = false);
+unsigned long getPrevTime();
+unsigned long getTick();
+unsigned long getLastTick();
+
 #endif
