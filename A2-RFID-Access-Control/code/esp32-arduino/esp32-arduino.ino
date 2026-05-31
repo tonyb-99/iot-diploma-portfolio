@@ -25,7 +25,6 @@ typedef enum {
   EXIT,
   ACCEPT,
   REJECT,
-  WAIT,
 } States;
 
 States cardState = States::IDLE;
@@ -38,7 +37,6 @@ unsigned long startTick = 0;
 
 const char* uidFile = "/uids.csv";
 const bool debug = true;
-bool playedSFX = false;
 bool setupComplete;
 bool registerMode = false;
 MFRC522::Uid user[TABLESIZE];
@@ -57,7 +55,7 @@ byte knownKeys[NR_KNOWN_KEYS][MFRC522::MIFARE_Misc::MF_KEY_SIZE] =  {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}  // 00 00 00 00 00 00
 };
 
-bool findUID(byte* uid, bool debug);
+// bool findUID(byte* uid, bool debug);
 // Assume the first card is the master key which enables privilege to register new cards until tagged off.
 
 void setup()
@@ -97,7 +95,8 @@ void loop() {
     {
         case States::IDLE:
         {
-            if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial())
+            // if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial())
+            if (!mfrc522.PICC_IsNewCardPresent())
             {
                 //cardDetected = false;
                 digitalWrite(G_PIN, LOW);
@@ -111,6 +110,11 @@ void loop() {
                     digitalWrite(R_PIN, LOW);
                 //   Serial.println("RED LED: LOW");
                 }
+                return;
+            }
+
+            if (!mfrc522.PICC_ReadCardSerial())
+            {
                 return;
             }
 
@@ -138,7 +142,7 @@ void loop() {
                 digitalWrite(G_PIN, LOW);
             }
 
-            if(tick - startTick > 40)
+            if(tick - startTick > 20)
             {
                 startTick = 0;
                 Serial.println("Process timed out! Please tap again ...");
@@ -173,7 +177,8 @@ void loop() {
                 Serial.print("PCD_Authenticate() failed: ");
                 Serial.println(mfrc522.GetStatusCodeName(status));
                 Serial.println("Failed during idle state!");
-                cardState = States::REJECT;
+                // cardState = States::REJECT;
+
                 break;
             }
 
@@ -321,6 +326,7 @@ void loop() {
 
         case States::REJECT:
         {
+            startTick = 0;
             cardState = States::IDLE;
             mfrc522.PICC_HaltA();       // Halt PICC
             mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
