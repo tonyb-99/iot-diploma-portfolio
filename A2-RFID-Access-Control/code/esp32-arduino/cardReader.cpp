@@ -105,9 +105,10 @@ void cardReadProcess(bool debug)
         break;
       }
 
+      // registerUID(mfrc522->uid.uidByte);
 
       // If uid does not exists but is in register mode skip to setup
-      if(!findUID(mfrc522->uid.uidByte, true) && registerMode)              // NEW BUG: Occurs when deregistering a card in registerMode
+      if(findUID(mfrc522->uid.uidByte, true) == false && registerMode)              // NEW BUG: Occurs when deregistering a card in registerMode
       {
         cardState = States::SETUP;
         if(debug) { Serial.println("Assigning new card ..."); }
@@ -124,16 +125,22 @@ void cardReadProcess(bool debug)
       {
         if(debug)
         {
-          Serial.print("PCD_Authenticate() failed: ");
+          Serial.print("PCD_Authenticate() failed during INSPECTION: ");
           Serial.println(mfrc522->GetStatusCodeName(status));
         }
-        cardState = States::IDLE;
+        // cardState = States::IDLE;
         break;
       }
 
 
       cardState = States::READ;
       if(debug) { Serial.println("Keys match! Now reading ...") ;}
+
+
+      /*UNCOMMENT IF CARD FAILS*/
+      // factoryResetCard();
+      // cardState = States::IDLE;
+
       break;
     }
 
@@ -180,6 +187,8 @@ void cardReadProcess(bool debug)
 
       cardState = States::WRITE;
       if(debug) { Serial.println("Passed preparations! Now writing ...");}
+      registerUID(mfrc522->uid.uidByte);
+      Serial.println("Factory key overwritten!");
       break;
     }
     case States::WRITE:     
@@ -189,8 +198,8 @@ void cardReadProcess(bool debug)
       writeToTrailer(key.keyByte);
 
       // Write to csv file
-      registerUID(mfrc522->uid.uidByte);
-      Serial.println("Factory key overwritten!");
+      // registerUID(mfrc522->uid.uidByte);
+      // Serial.println("Factory key overwritten!");
       
       text = !setupComplete ? "MASTER" : "";
       writeToDataBlock(dataAddress, text);
@@ -238,8 +247,6 @@ void cardReadProcess(bool debug)
       }
             
 
-
-      // NEEDS FIXING
       if(readData == String(uidHash(mfrc522->uid.uidByte)))
       {
         cardState = States::EXIT;
@@ -418,12 +425,15 @@ int uidHash(byte* uidByte)
     {
         hash = (hash * 31) + uidByte[i];
     }
+    Serial.printf("Hash value: %i\n", hash);
     return abs(hash);
 }
 
 int uidIndex(byte* uidByte)
 {
-    return uidHash(uidByte) % TABLESIZE;
+    int index = uidHash(uidByte) % TABLESIZE;
+    Serial.printf("Hash index: %i\n", index);
+    return index;
 }
 
 
@@ -467,6 +477,7 @@ bool findUID(byte* uid, bool debug)
         }
         if(line.c_str()[i] != uid[i])
         {
+            Serial.println("No match!");
             return false;
         }
     }
