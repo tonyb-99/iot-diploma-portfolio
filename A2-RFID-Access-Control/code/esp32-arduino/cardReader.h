@@ -37,6 +37,7 @@ void setupCompleted();
 void initDatabase();
 int uidHash(byte* uidByte);
 int uidIndex(byte* uidByte);
+String uidToString(byte* uid);
 void getUserFileContent(String* content, byte* uid, int size = 2, bool debug = false);
 bool findUID(byte* uid, bool debug = false);
 bool hashCheck(byte* uid);

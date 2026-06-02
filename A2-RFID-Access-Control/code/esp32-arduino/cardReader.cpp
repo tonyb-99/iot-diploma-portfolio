@@ -436,6 +436,20 @@ int uidIndex(byte* uidByte)
     return index;
 }
 
+String uidToString(byte* uid)
+{
+  const char hex[] = "0123456789ABCDEF";
+
+  String result;
+
+  for(byte i = 0; i < mfrc522->uid.size; i++)
+  {
+    result += hex[(uid[i] >> 4) & 0x0f];
+    result += hex[uid[i] & 0x0f];
+  }
+
+  return result;
+}
 
 // May not need to store hash, but just ids
 void getUserFileContent(String* content, byte* uid, int size, bool debug)
@@ -462,39 +476,41 @@ void getUserFileContent(String* content, byte* uid, int size, bool debug)
 
 bool findUID(byte* uid, bool debug)
 {
+    String convertedUID = uidToString(uid);
     String line = readLine(LittleFS, uidFile, uidIndex(uid), true);
-    if(line == "")
-    {
-        Serial.println("Failed to retrieve user uid content!");
-        return false;
-    }
 
-    for(byte i = 0; i < mfrc522->uid.size; i++)
-    {
-        if(debug)
-        {
-            Serial.printf("Line[%i]: %c || uid[%i]: %c\n", i, line.c_str()[i], i, uid[i]);
-        }
-        if(line.c_str()[i] != uid[i])
-        {
-            Serial.println("No match!");
-            return false;
-        }
-    }
+    // if(line == "")
+    // {
+    //     Serial.println("Failed to retrieve user uid content!");
+    //     return false;
+    // }
 
+    // for(byte i = 0; i < mfrc522->uid.size; i++)
+    // {
+    //     if(debug)
+    //     {
+    //         Serial.printf("Line[%i]: %c || uid[%i]: %c\n", i, line.c_str()[i], i, uid[i]);
+    //     }
+    //     if(line.c_str()[i] != uid[i])
+    //     {
+    //         Serial.println("No match!");
+    //         return false;
+    //     }
+    // }
     if(debug)
     {
-        Serial.printf("UID: %s", line);
+      Serial.printf("UID on card: %s\n", convertedUID);
+      Serial.printf("UID in database: %s\n", line);
     }
-    return true;
+    return convertedUID == line;
 }
 
 bool hashCheck(byte* uid)
 {
-    String* content;
-    getUserFileContent(content, uid);
-    String hash =  content[1];
-    return hash.toInt() == uidHash(uid);
+  String* content;
+  getUserFileContent(content, uid);
+  String hash =  content[1];
+  return hash.toInt() == uidHash(uid);
 }
 
 bool isBlockEmpty(byte* buffer)
@@ -526,7 +542,8 @@ void registerUID(byte* uid)
     if(line == "00000000")
     {
         file.seek(position);
-        file.write(uid, 8);
+        // file.write(uidToString(uid), 8);
+        file.print(uidToString(uid));
     }
     else
     {
@@ -548,7 +565,8 @@ void deregisterUID(byte* uid)
     if(line != "00000000")
     {
         file.seek(position);
-        file.write((const uint8_t*)"00000000", 8);
+        // file.write((const uint8_t*)"00000000", 8);
+        file.print("00000000");
         Serial.println("UID has been deregistered!");
     }
     file.close();
