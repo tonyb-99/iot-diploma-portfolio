@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "cardReader.h"
 
-// Code based on RandomNerdTutorial (2026). https://randomnerdtutorials.com/esp32-mfrc522-rfid-reader-arduino/  https://randomnerdtutorials.com/esp32-rfid-user-management-web-server/
+
 
 #define SPKR_PIN 25
 #define G_PIN   26
