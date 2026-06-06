@@ -94,7 +94,7 @@ void cardReadProcess(bool debug)
         digitalWrite(greenPin, LOW);
       }
 
-      if(getTick() - startTick > 10)       // Timeout if exceeds ~1 seconds. 
+      if(getTick() - startTick > 7)       // Timeout if exceeds ~ 0.7 seconds. 
       {
         cardState = States::REJECT;
         if(debug) { Serial.println("Process timed out! Please tap again ..."); }
@@ -417,7 +417,9 @@ void initPrefs()
 {
   Serial.println("Loading preferrences ...");
   prefs.begin("rfid", false);
-  //prefs.clear();                                    // UNCOMMENT TO RESET
+  // UNCOMMENT TO RESET
+  // prefs.clear();
+  // return;                                    
   byte keyData[MFRC522::MIFARE_Misc::MF_KEY_SIZE];
   size_t len = prefs.getBytesLength("key");
 
