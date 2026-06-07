@@ -91,16 +91,19 @@ void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_rang
   }
 }
 
+// LSB = Least significant bit. 1 LSB = 0.002 g
 void initVibrationInterrupt(mpu6050_highpass_t highpassBandwidth, float lsb, float duration)
 {
   mpu.setHighPassFilter(highpassBandwidth);
-  mpu.setMotionDetectionThreshold(lsb);
+  mpu.setMotionDetectionThreshold(lsb);           // 10 LSB recommended. Lower means higher sensitivity. Higher is less sensitivity.
   mpu.setMotionDetectionDuration(duration);
-  mpu.setInterruptPinLatch(true);	// Keep it latched.  Will turn off when reinitialized.
+  mpu.setInterruptPinLatch(true);	                // Keep it latched.  Will turn off when reinitialized.
   mpu.setInterruptPinPolarity(true);
   mpu.setMotionInterrupt(true);
 }
 
+
+// Calibrate the vibration sensor by sampling values to find the average offset
 void calibrateA(bool debug)
 {
   int sampleSize = 100;
@@ -131,6 +134,7 @@ void calibrateA(bool debug)
   }
 }
 
+// Read sensor values and refine values.
 void sensorUpdate(bool debug)
 {
   mpu.getEvent(&a, &g, &temp);
@@ -152,6 +156,8 @@ float getRawAcceleration_z()
   return a.acceleration.z - offsetZ;
 }
 
+
+// This function calculates the average of a data point by averaging a subset of values prior to it.
 void lowPassFiltering(bool debug)
 {
   // Each time function is called, add values to buffer

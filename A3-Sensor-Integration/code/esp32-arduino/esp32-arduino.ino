@@ -66,6 +66,7 @@ void loop()
     }
   }
 
+  // Interrupt on abrupt movement
   if(mpu.getMotionInterruptStatus())
   {
     Serial.println("Anomaly detected!");
@@ -76,6 +77,7 @@ void loop()
     return;
   }
 
+  // Calibrate upon initialisation and after interrupts
   if(!hasCalibrated)
   {
     calibrateA(true);
@@ -84,6 +86,7 @@ void loop()
 
   isAbnormal = false;
 
+  // Measure vibration and export every ~ 0.5s
   if(tick % 50 == 0)
   {
     sensorUpdate(true);
