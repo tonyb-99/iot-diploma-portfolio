@@ -6,6 +6,7 @@
 
 void initLittleFS();
 String readFile(fs::FS &fs, const char * path, bool debug = false);
+String readLine(fs::FS &fs, const char * path, int index, bool debug = false);
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void deleteFile(fs::FS &fs, const char *path); 
 #endif
