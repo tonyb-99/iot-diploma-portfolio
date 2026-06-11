@@ -3,19 +3,25 @@
 #include "clock.h"
 #include "display.h"
 #include "SG90-Servo.h"
+#include "cardReader.h"
+#include "custom_timer.h"
+#include "file_manager.h"
+#include "sounds.h"
+#include "vibration_monitor.h"
+#include "rgb.h"
+#include "temperature_sensor.h"
 #include <Arduino.h>
 
-// Humidity sensor: https://randomnerdtutorials.com/esp32-dht11-dht22-temperature-humidity-sensor-arduino-ide/
-// OLED Display: https://randomnerdtutorials.com/esp32-ssd1306-oled-display-arduino-ide/
-// DS3231 RTC: https://randomnerdtutorials.com/esp32-ds3231-real-time-clock-arduino/
-// MQ-2 Sensor: https://randomnerdtutorials.com/guide-for-mq-2-gas-smoke-sensor-with-arduino/
-// MQ-2 Datasheet: https://www.mouser.com/datasheet/2/321/605-00008-MQ-2-Datasheet-370464.pdf
+#define DHTPIN 25
+#define MQ2PIN 35
+#define MQ2ISR 34
+#define SERVOPIN 26
+#define RGBRPIN 27
+#define RGBGPIN 14
+#define RGBBPIN 12
+#define THERMPIN 13
 
-#define DHTPIN 2
-#define MQ2PIN 13
-#define MQ2ISR 12
-#define SERVOPIN 27
-
+const bool debug = true;
 
 void setup() {
   // put your setup code here, to run once:
@@ -26,7 +32,9 @@ void setup() {
   // initMQ2ISR(MQ2ISR);
   // calibrateMQ2(true);
   // initRTC();
-  initServo(SERVOPIN);
+  // initServo(SERVOPIN);
+  initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
+  initThermistor(THERMPIN);
 }
 
 void loop() {
@@ -40,11 +48,30 @@ void loop() {
   // Serial.printf("Day: %s\n", getDay());
   // Serial.printf("Day (full): %s\n", getDay(false));
   // delay(2000);
-  rotate(90, 15, true);
-  delay(1000);
-  rotate(180, 15, true);
-  delay(1000);
-  rotate(0, 15, true);
-  delay(1000);
+  // rotate(90, 15, true);
+  // delay(1000);
+  // rotate(180, 15, true);
+  // delay(1000);
+  // rotate(0, 15, true);
+  // delay(1000);
+  initCustomTimer(debug);
+  temperatureAlert(debug);
+  // testRGB();
 
+}
+
+void testRGB()
+{
+  redON();
+  delay(1000);
+  RGBOFF();
+  delay(1000);
+  greenON();
+  delay(1000);
+  RGBOFF();
+  delay(1000);
+  yellowON();
+  delay(1000);
+  RGBOFF();
+  delay(1000);
 }

@@ -1,3 +1,5 @@
+// DS3231 RTC: https://randomnerdtutorials.com/esp32-ds3231-real-time-clock-arduino/
+
 #ifndef CLOCK_H
 #define CLOCH_H
 

@@ -1,4 +1,6 @@
 // Assisted with AI: https://chatgpt.com/share/6a1273ad-4c5c-83ec-9596-9190cc3ebc09
+// MQ-2 Sensor: https://randomnerdtutorials.com/guide-for-mq-2-gas-smoke-sensor-with-arduino/
+// MQ-2 Datasheet: https://www.mouser.com/datasheet/2/321/605-00008-MQ-2-Datasheet-370464.pdf
 
 #include "MQ-2.h"
 

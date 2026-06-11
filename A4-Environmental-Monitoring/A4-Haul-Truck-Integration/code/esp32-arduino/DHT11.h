@@ -1,3 +1,5 @@
+// Humidity sensor: https://randomnerdtutorials.com/esp32-dht11-dht22-temperature-humidity-sensor-arduino-ide/
+
 #ifndef DHT11_H
 #define DHT11_H
 

@@ -11,23 +11,23 @@ namespace{
 void initCustomTimer(bool debug)
 {
   if (millis() - prevTime >= 100) {
-        prevTime = millis();
-        tick++;
-    }
+    prevTime = millis();
+    tick++;
+  }
 
-    if(lastTick != tick)
+  if(lastTick != tick)
+  {
+    lastTick = tick;
+    if(debug)
     {
-      lastTick = tick;
-      if(debug)
+      if(tick != 0 && tick % 10 == 0)
       {
-        if(tick != 0 && tick % 10 == 0)
-        {
-            Serial.print("Time: ");
-            Serial.print(tick / 10);
-            Serial.println(" sec");
-        } 
-      }
+        Serial.print("Time: ");
+        Serial.print(tick / 10);
+        Serial.println(" sec");
+      } 
     }
+  }
 }
 
 unsigned long getPrevTime()
