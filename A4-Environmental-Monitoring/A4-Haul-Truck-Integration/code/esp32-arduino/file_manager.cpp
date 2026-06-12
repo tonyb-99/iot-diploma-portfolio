@@ -128,9 +128,10 @@ void deleteFile(fs::FS &fs, const char *path) {
   }
 }
 
-void SD_FileCheck(File file, String fileName, bool debug)
+void SD_FileCheck(const String& fileName, bool debug)
 {
-  if(!SD.exists(fileName))
+  bool hasFile = SD.exists(fileName);
+  if(!hasFile)
   {
     if(debug)
     {
@@ -138,11 +139,22 @@ void SD_FileCheck(File file, String fileName, bool debug)
       Serial.print(fileName);
       Serial.println(" file ...");
     }
-    file = SD.open(fileName, FILE_WRITE);
-    file.close();
+    File file = SD.open(fileName, FILE_WRITE);
+    if(file)
+    {
+      file.close();
+    }
+    else
+    {
+      Serial.print("Failed to create file: ");
+      Serial.println(fileName);
+    }
+    
   }
 
-  if(SD.exists(fileName))
+  hasFile = SD.exists(fileName);
+
+  if(hasFile)
   {
     if(debug)
     {

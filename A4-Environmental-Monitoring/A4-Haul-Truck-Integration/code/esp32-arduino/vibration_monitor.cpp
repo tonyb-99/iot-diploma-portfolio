@@ -1,10 +1,26 @@
+// https://randomnerdtutorials.com/esp32-how-to-log-data/
+// https://randomnerdtutorials.com/esp32-microsd-card-arduino/
+// https://esp32io.com/tutorials/esp32-sd-card
+// https://randomnerdtutorials.com/esp32-mpu-6050-accelerometer-gyroscope-arduino/
+// https://randomnerdtutorials.com/flash-upload-micropython-firmware-esp32-esp8266/
+// https://controllerstech.com/mpu6050-arduino-tutorial/
+// https://dsa-explorer-hub.vercel.app/algorithm/low-pass-filter
+// https://maker.pro/arduino/tutorial/how-to-clean-up-noisy-sensor-data-with-a-moving-average-filter
+
+// Calculate offset
+// Calculate moving average using low pass filter: ideal for stable values as sensor is stationary.
+// Peak ground acceleration (PGA): https://en.wikipedia.org/wiki/Peak_ground_acceleration
+// Threshold +/- 0.02 g, unstable.
+
 #include "vibration_monitor.h"
 
 Adafruit_MPU6050 mpu;
 sensors_event_t a, g, temp;
-// bool isAbnormal = false;
 
 namespace {
+  const String* pFileName = nullptr;
+  const String headings = "timestamp, x_raw, x_filtered, y_raw, y_filtered, z_raw, z_filtered, IsAbnormal?\n";
+  unsigned long startTick = 0;
   float offsetX = 0, offsetY = 0, offsetZ = 0;
   unsigned long count = 0;
   const int bufferSize = 5;
@@ -13,6 +29,16 @@ namespace {
   float bufferZ[5];
   float avgX = 0, avgY = 0, avgZ = 0;
   String output = "";
+  bool hasCalibrated = false;
+  bool isAbnormal = false;
+}
+
+void initSDStorage(uint8_t sdPin, const String& fileName, bool debug)
+{
+  pFileName = &fileName;
+  initSDReader(sdPin, debug);
+  SD_FileCheck(*pFileName, debug);
+  writeFile(SD, pFileName->c_str(), headings.c_str());
 }
 
 void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t bandwidth, bool debug)
@@ -231,21 +257,61 @@ float getAvgAcceleration_z()
   return avgZ;
 }
 
-// String getRawStringData()
-// {
-//   String buffer = "";
-//   buffer = String(getRawAcceleration_x(), 3) + ", " + String(getRawAcceleration_y(), 3) + ", " + String(getRawAcceleration_z(), 3) + ", ";
-//   return buffer;
-// }
 
-// String getFilteredStringData()
-// {
-//   String buffer = "";
-//   buffer = String(getAvgAcceleration_x(), 3) + ", " + String(getAvgAcceleration_y(), 3) + ", " + String(getAvgAcceleration_z(), 3) + ", ";
-//   return buffer;
-// }
+String exportString()
+{
+  String output = "";
+  output += getDate();
+  output += " ";
+  output += getTimestamp();
+  output += ", ";
+  output += String(getRawAcceleration_x(), 3);
+  output += ", ";
+  output += String(getAvgAcceleration_x(), 3);
+  output += ", ";
+  output += String(getRawAcceleration_y(), 3);
+  output += ", ";
+  output += String(getAvgAcceleration_y(), 3);
+  output += ", ";
+  output += String(getRawAcceleration_z(), 3);
+  output += ", ";
+  output += String(getAvgAcceleration_z(), 3);
+  output += ", ";
+  output += String(isAbnormal);
+  output += "\n";
+  return output;
+}
 
+void measureVibrations(bool debug)
+{
+  // Interrupt on abrupt movement
+  if(mpu.getMotionInterruptStatus())
+  {
+    Serial.println("Anomaly detected!");
+    isAbnormal = true;
+    sensorUpdate(debug);
+    appendFile(SD, pFileName->c_str(), exportString().c_str());
+    hasCalibrated = false;
+    return;
+  }
 
+  // Calibrate upon initialisation and after interrupts
+  if(!hasCalibrated)
+  {
+    calibrateA(debug);
+    hasCalibrated = true;
+  }
+
+  isAbnormal = false;
+
+  // Measure vibration and export every 10s
+  if(getTick() - startTick >= 100)
+  {
+    startTick = getTick();
+    sensorUpdate(debug);
+    appendFile(SD, pFileName->c_str(), exportString().c_str());
+  }
+}
 
 
 

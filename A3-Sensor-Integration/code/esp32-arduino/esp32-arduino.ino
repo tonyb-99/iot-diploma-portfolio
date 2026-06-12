@@ -4,9 +4,7 @@
 
 #define CS_PIN 5
 
-File fileData;
-const String fileName = "/vibration_data.csv";
-const String headings = "timestamp, x_raw, x_filtered, y_raw, y_filtered, z_raw, z_filtered, IsAbnormal?\n";
+
 const bool debug = true;
 bool hasCalibrated = false;
 unsigned long currentTime = 0;

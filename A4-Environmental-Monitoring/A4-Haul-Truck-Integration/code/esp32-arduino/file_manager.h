@@ -14,5 +14,5 @@ String readLine(fs::FS &fs, const char * path, int index, bool debug = false);
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void appendFile(fs::FS &fs, const char *path, const char *message);
 void deleteFile(fs::FS &fs, const char *path); 
-void SD_FileCheck(File file, String fileName, bool debug = false);
+void SD_FileCheck(const String& fileName, bool debug = false);
 #endif

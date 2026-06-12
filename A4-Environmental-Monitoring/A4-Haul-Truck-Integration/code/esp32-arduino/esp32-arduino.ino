@@ -20,8 +20,10 @@
 #define RGBGPIN 14
 #define RGBBPIN 12
 #define THERMPIN 13
+#define SDPIN 33
 
 const bool debug = true;
+const String fileName = "/vibration_data.csv";
 
 void setup() {
   // put your setup code here, to run once:
@@ -33,8 +35,14 @@ void setup() {
   // calibrateMQ2(true);
   // initRTC();
   // initServo(SERVOPIN);
-  initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
-  initThermistor(THERMPIN);
+  // initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
+  // initThermistor(THERMPIN);
+  initRTC();
+  initSDStorage(SDPIN, fileName, debug);
+  delay(200);
+  initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
+  initVibrationInterrupt(MPU6050_HIGHPASS_5_HZ, 10);            // Picks fast moving vibrations
+  delay(100);
 }
 
 void loop() {
@@ -54,24 +62,11 @@ void loop() {
   // delay(1000);
   // rotate(0, 15, true);
   // delay(1000);
+
+  // initCustomTimer(debug);
+  // temperatureAlert(debug);
+
   initCustomTimer(debug);
-  temperatureAlert(debug);
-  // testRGB();
-
+  measureVibrations(debug);
 }
 
-void testRGB()
-{
-  redON();
-  delay(1000);
-  RGBOFF();
-  delay(1000);
-  greenON();
-  delay(1000);
-  RGBOFF();
-  delay(1000);
-  yellowON();
-  delay(1000);
-  RGBOFF();
-  delay(1000);
-}
