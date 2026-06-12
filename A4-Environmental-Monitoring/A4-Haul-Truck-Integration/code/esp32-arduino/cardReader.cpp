@@ -5,6 +5,7 @@
 States cardState = States::IDLE;
 Preferences prefs;
 namespace {
+  unsigned long startTick = 0;
   uint8_t redPin;
   uint8_t greenPin;
   uint8_t speakerPin;

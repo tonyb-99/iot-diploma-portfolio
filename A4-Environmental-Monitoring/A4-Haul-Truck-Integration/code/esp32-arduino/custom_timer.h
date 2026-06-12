@@ -6,7 +6,7 @@
 // extern unsigned long prevTime;
 // extern unsigned long tick;
 // extern unsigned long lastTick;
-extern unsigned long startTick;
+// extern unsigned long startTick;
 
 void initCustomTimer(bool debug = false);
 unsigned long getPrevTime();

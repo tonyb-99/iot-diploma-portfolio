@@ -1,6 +1,6 @@
 #include "custom_timer.h"
 
-unsigned long startTick = 0;
+// unsigned long startTick = 0;
 
 namespace{
   unsigned long prevTime = 0;
