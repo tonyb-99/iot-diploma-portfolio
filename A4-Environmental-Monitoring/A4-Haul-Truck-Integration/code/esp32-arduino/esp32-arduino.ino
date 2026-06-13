@@ -11,6 +11,7 @@
 #include "rgb.h"
 #include "temperature_sensor.h"
 #include <Arduino.h>
+#include <Wire.h>
 
 #define DHTPIN 25
 #define MQ2PIN 35
@@ -37,6 +38,11 @@ void setup() {
   // initServo(SERVOPIN);
   // initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
   // initThermistor(THERMPIN);
+  // Wire.begin(21, 22);
+  // Wire.setClock(100000);
+  // delay(200);
+
+
   initRTC();
   initSDStorage(SDPIN, fileName, debug);
   delay(200);

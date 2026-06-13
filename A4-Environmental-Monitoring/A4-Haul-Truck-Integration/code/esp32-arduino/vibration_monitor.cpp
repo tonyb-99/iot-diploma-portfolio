@@ -43,7 +43,7 @@ void initSDStorage(uint8_t sdPin, const String& fileName, bool debug)
 
 void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t bandwidth, bool debug)
 {
-  if (!mpu.begin()) {
+  if (!mpu.begin(MPU6050_ALTADDR)) {
     Serial.println("Failed to find MPU6050 chip");
     while (1) {
       delay(10);
@@ -54,6 +54,9 @@ void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_rang
   mpu.setGyroRange(gyro);
   mpu.setFilterBandwidth(bandwidth);
 
+  Serial.println("");
+  Serial.println("Accelerometer initiated ...");
+  
   if(debug)
   {
     Serial.print("Accelerometer range set to: ");
@@ -112,8 +115,6 @@ void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_rang
         Serial.println("5 Hz");
         break;
     }
-
-    Serial.println("");
   }
 }
 
@@ -126,6 +127,7 @@ void initVibrationInterrupt(mpu6050_highpass_t highpassBandwidth, float lsb, flo
   mpu.setInterruptPinLatch(true);	                // Keep it latched.  Will turn off when reinitialized.
   mpu.setInterruptPinPolarity(true);
   mpu.setMotionInterrupt(true);
+  Serial.println("Acc. Interrupt initiated ...");
 }
 
 

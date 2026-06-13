@@ -9,6 +9,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#define MPU6050_ALTADDR 0x69
+
 extern Adafruit_MPU6050 mpu;
 extern sensors_event_t a, g, temp;
 // extern bool isAbnormal;
