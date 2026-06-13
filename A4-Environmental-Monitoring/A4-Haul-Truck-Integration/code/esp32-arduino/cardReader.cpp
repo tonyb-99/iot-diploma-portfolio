@@ -38,9 +38,14 @@ void initCardReader(uint8_t ssPin, uint8_t rstPin, uint8_t speaker, uint8_t redL
   pinMode(greenPin, OUTPUT);
 
   SPI.begin();
-  mfrc522->PCD_Init();
-  Serial.println("RFID Initiated ...");
   delay(1000);
+  mfrc522->PCD_Init();
+  byte version = mfrc522->PCD_ReadRegister(MFRC522::VersionReg);
+
+  Serial.print("Version: 0x");
+  Serial.println(version, HEX);
+  Serial.println("RFID Initiated ...");
+  
   initPrefs();
   initLittleFS();
   initDatabase();

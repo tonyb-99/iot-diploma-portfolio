@@ -8,27 +8,27 @@ void initLittleFS() {
   Serial.println("LittleFS mounted successfully");
 }
 
-void initSDReader(uint8_t cs_pin, bool debug)
-{
-  if(!SD.begin(cs_pin))
-  {
-    while(1) 
-    {
-      Serial.println("SD Card not detected!");
-      delay(1000);
-    }
-  }
+// void initSDReader(uint8_t cs_pin, bool debug)
+// {
+//   if(!SD.begin(cs_pin))
+//   {
+//     while(1) 
+//     {
+//       Serial.println("SD Card not detected!");
+//       delay(1000);
+//     }
+//   }
 
-  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  if(debug)
-  {
-    Serial.print("SD Card Size: ");
-    Serial.print(cardSize);
-    Serial.println("MB");
-    Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
-    Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
-  }
-}
+//   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+//   if(debug)
+//   {
+//     Serial.print("SD Card Size: ");
+//     Serial.print(cardSize);
+//     Serial.println("MB");
+//     Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
+//     Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
+//   }
+// }
 
 // Read File 
 String readFile(fs::FS &fs, const char * path, bool debug){
@@ -128,9 +128,9 @@ void deleteFile(fs::FS &fs, const char *path) {
   }
 }
 
-void SD_FileCheck(const String& fileName, bool debug)
+void fileCheck(fs::FS &fs, const String& fileName, bool debug)
 {
-  bool hasFile = SD.exists(fileName);
+  bool hasFile = fs.exists(fileName);
   if(!hasFile)
   {
     if(debug)
@@ -139,7 +139,7 @@ void SD_FileCheck(const String& fileName, bool debug)
       Serial.print(fileName);
       Serial.println(" file ...");
     }
-    File file = SD.open(fileName, FILE_WRITE);
+    File file = fs.open(fileName, FILE_WRITE);
     if(file)
     {
       file.close();
@@ -152,13 +152,13 @@ void SD_FileCheck(const String& fileName, bool debug)
     
   }
 
-  hasFile = SD.exists(fileName);
+  hasFile = fs.exists(fileName);
 
   if(hasFile)
   {
     if(debug)
     {
-      Serial.print("SD card contains the file ");
+      Serial.print("File system contains the file ");
       Serial.println(fileName);
     }
   }

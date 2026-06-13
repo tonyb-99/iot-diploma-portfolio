@@ -36,7 +36,7 @@ void rotate(int angle, int duration, bool debug)
 
     if(debug)
     {
-      Serial.printf("Rotatiing from %i' to %i'\n", pos, angle);
+      Serial.printf("Rotatiing to angle position of %i'\n", angle);
     }
     
   }

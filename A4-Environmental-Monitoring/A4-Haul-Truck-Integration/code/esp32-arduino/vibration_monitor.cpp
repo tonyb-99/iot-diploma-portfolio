@@ -33,12 +33,11 @@ namespace {
   bool isAbnormal = false;
 }
 
-void initSDStorage(uint8_t sdPin, const String& fileName, bool debug)
+void createDataFile(fs::FS &fs, const String& fileName, bool debug)
 {
   pFileName = &fileName;
-  initSDReader(sdPin, debug);
-  SD_FileCheck(*pFileName, debug);
-  writeFile(SD, pFileName->c_str(), headings.c_str());
+  fileCheck(fs, *pFileName, debug);
+  writeFile(fs, pFileName->c_str(), headings.c_str());
 }
 
 void initVibrationMonitor(mpu6050_accel_range_t accelerometer, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t bandwidth, bool debug)
@@ -260,7 +259,7 @@ float getAvgAcceleration_z()
 }
 
 
-String exportString()
+String exportString(bool debug)
 {
   String output = "";
   output += getDate();
@@ -281,10 +280,15 @@ String exportString()
   output += ", ";
   output += String(isAbnormal);
   output += "\n";
+  if(debug) 
+  { 
+    Serial.print(headings);
+    Serial.print(output); 
+  }
   return output;
 }
 
-void measureVibrations(bool debug)
+void measureVibrations(fs::FS &fs, bool debug)
 {
   // Interrupt on abrupt movement
   if(mpu.getMotionInterruptStatus())
@@ -292,7 +296,7 @@ void measureVibrations(bool debug)
     Serial.println("Anomaly detected!");
     isAbnormal = true;
     sensorUpdate(debug);
-    appendFile(SD, pFileName->c_str(), exportString().c_str());
+    appendFile(fs, pFileName->c_str(), exportString(debug).c_str());
     hasCalibrated = false;
     return;
   }
@@ -311,7 +315,7 @@ void measureVibrations(bool debug)
   {
     startTick = getTick();
     sensorUpdate(debug);
-    appendFile(SD, pFileName->c_str(), exportString().c_str());
+    appendFile(fs, pFileName->c_str(), exportString(debug).c_str());
   }
 }
 

@@ -13,15 +13,20 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define DHTPIN 25
+#define DHTPIN 33
 #define MQ2PIN 35
 #define MQ2ISR 34
-#define SERVOPIN 26
+#define SERVOPIN 25
 #define RGBRPIN 27
 #define RGBGPIN 14
 #define RGBBPIN 12
 #define THERMPIN 13
 #define SDPIN 33
+#define SSPIN 5
+#define RSTPIN 4
+#define REDPIN 15
+#define GREENPIN 16
+#define SPKRPIN 17
 
 const bool debug = true;
 const String fileName = "/vibration_data.csv";
@@ -44,11 +49,16 @@ void setup() {
 
 
   initRTC();
-  initSDStorage(SDPIN, fileName, debug);
+  delay(200);
+  initLittleFS();
+  delay(100);
+  createDataFile(LittleFS, fileName, debug);
   delay(200);
   initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
   initVibrationInterrupt(MPU6050_HIGHPASS_5_HZ, 10);            // Picks fast moving vibrations
   delay(100);
+  initCardReader(SSPIN, RSTPIN, SPKRPIN, REDPIN, GREENPIN);
+  delay(200);
 }
 
 void loop() {
@@ -57,11 +67,11 @@ void loop() {
   // detectGas(true);
   // delay(3000);
 
-  // Serial.printf("Timestamp: %s\n", getTimestamp());
-  // Serial.printf("Date: %s\n", getDate());
-  // Serial.printf("Day: %s\n", getDay());
-  // Serial.printf("Day (full): %s\n", getDay(false));
-  // delay(2000);
+  // displayText("Hello");
+
+  // delay(1000);
+  // displayText("World!");
+
   // rotate(90, 15, true);
   // delay(1000);
   // rotate(180, 15, true);
@@ -73,6 +83,10 @@ void loop() {
   // temperatureAlert(debug);
 
   initCustomTimer(debug);
-  measureVibrations(debug);
+  measureVibrations(LittleFS, debug);
+
+  // initCustomTimer(debug);
+  cardReadProcess(debug);
+
 }
 
