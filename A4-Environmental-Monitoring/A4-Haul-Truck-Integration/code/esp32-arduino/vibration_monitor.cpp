@@ -288,7 +288,7 @@ String exportString(bool debug)
   return output;
 }
 
-void measureVibrations(fs::FS &fs, bool debug)
+void measureVibrations(fs::FS &fs, int interval, bool debug)
 {
   // Interrupt on abrupt movement
   if(mpu.getMotionInterruptStatus())
@@ -310,8 +310,8 @@ void measureVibrations(fs::FS &fs, bool debug)
 
   isAbnormal = false;
 
-  // Measure vibration and export every 10s
-  if(getTick() - startTick >= 100)
+  // Measure vibration and export every interval
+  if(getTick() - startTick >= interval)
   {
     startTick = getTick();
     sensorUpdate(debug);

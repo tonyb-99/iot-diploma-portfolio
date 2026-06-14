@@ -27,6 +27,7 @@
 #define REDPIN 15
 #define GREENPIN 16
 #define SPKRPIN 17
+#define YELLOWPIN 26
 
 const bool debug = true;
 const String fileName = "/vibration_data.csv";
@@ -35,10 +36,10 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   // initDisplay();
-  // initDHT11(DHTPIN);
-  // initMQ2(MQ2PIN);
-  // initMQ2ISR(MQ2ISR);
-  // calibrateMQ2(true);
+  initDHT11(DHTPIN);
+  initMQ2(MQ2PIN, YELLOWPIN);
+  initMQ2ISR(MQ2ISR);
+  calibrateMQ2(true);
   // initRTC();
   // initServo(SERVOPIN);
   // initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
@@ -48,24 +49,21 @@ void setup() {
   // delay(200);
 
 
-  initRTC();
-  delay(200);
-  initLittleFS();
-  delay(100);
-  createDataFile(LittleFS, fileName, debug);
-  delay(200);
-  initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
-  initVibrationInterrupt(MPU6050_HIGHPASS_5_HZ, 10);            // Picks fast moving vibrations
-  delay(100);
-  initCardReader(SSPIN, RSTPIN, SPKRPIN, REDPIN, GREENPIN);
-  delay(200);
+  // initRTC();
+  // delay(200);
+  // initLittleFS();
+  // delay(100);
+  // createDataFile(LittleFS, fileName, debug);
+  // delay(200);
+  // initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
+  // initVibrationInterrupt(MPU6050_HIGHPASS_5_HZ, 10);            // Picks fast moving vibrations
+  // delay(100);
+  // initCardReader(SSPIN, RSTPIN, SPKRPIN, REDPIN, GREENPIN);
+  // delay(200);
 }
 
 void loop() {
-  // getTemperature(true);
-  // getHumidity(true);
-  // detectGas(true);
-  // delay(3000);
+
 
   // displayText("Hello");
 
@@ -82,11 +80,14 @@ void loop() {
   // initCustomTimer(debug);
   // temperatureAlert(debug);
 
-  initCustomTimer(debug);
-  measureVibrations(LittleFS, debug);
+  // initCustomTimer(debug);
+  // measureVibrations(LittleFS, debug);
 
   // initCustomTimer(debug);
-  cardReadProcess(debug);
+  // cardReadProcess(debug);
 
+  initCustomTimer(debug);
+  processDHT(true, true, 100, debug);
+  monitorGas(120, debug);
 }
 

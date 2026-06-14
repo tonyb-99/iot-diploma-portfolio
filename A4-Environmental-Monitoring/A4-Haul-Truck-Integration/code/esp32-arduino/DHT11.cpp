@@ -4,6 +4,7 @@
 
 namespace {
   DHT* dht;
+  unsigned long startTick = 0;
 }
 
 void initDHT11(uint8_t dhtPin)
@@ -32,4 +33,22 @@ float getHumidity(bool debug)
   }
   if(debug) { Serial.printf("Humidity: %.1f%%\n", h); }
   return h;
+}
+
+void processDHT(bool humidityON, bool tempON, int interval, bool debug)
+{
+  if(getTick() - startTick >= interval)
+  {
+    startTick = getTick();
+    if(humidityON)
+    {
+      float h = getHumidity(debug);
+    }
+
+    if(tempON)
+    {
+      float t = getTemperature(debug);
+    }
+
+  }
 }

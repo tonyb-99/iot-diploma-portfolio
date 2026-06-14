@@ -30,6 +30,6 @@ float getAvgAcceleration_z();
 String getRawStringData();
 String getFilteredStringData();
 String exportString(bool debug = false);
-void measureVibrations(fs::FS &fs, bool debug = false);
+void measureVibrations(fs::FS &fs, int interval = 100, bool debug = false);
 
 #endif

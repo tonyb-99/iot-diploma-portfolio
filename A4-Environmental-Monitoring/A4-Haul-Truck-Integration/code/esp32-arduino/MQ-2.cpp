@@ -7,26 +7,35 @@
 namespace{
   uint8_t mq2Pin_A;
   uint8_t mq2Pin_D;
+  uint8_t yellowPin;
   float defaultRo = 5;
   float rS_air;
   float rS_gas;
   float rO;
+  bool hasCalibrated = false;
   const float gasThreshold = 7;
+  unsigned long startTick = 0;
+  unsigned long isrTick = 0;
   volatile bool gasDetected = false;
+  volatile bool hasInterrupted = false;
 }
 
 // For instantaneous detection. State will change if analogue read decreases.
 void IRAM_ATTR gasISR()
 {
   gasDetected = true;
+  hasInterrupted = true;
+  isrTick = getTick();
 }
 
-void initMQ2(uint8_t analogPin)
+void initMQ2(uint8_t analogPin, uint8_t y_pin)
 {
   mq2Pin_A = analogPin;
+  yellowPin = y_pin;
   pinMode(mq2Pin_A, INPUT);
+  pinMode(yellowPin, OUTPUT);
   Serial.println("Preparing MQ2 sensor (~ 20 seconds)");
-  delay(20 * 1000); // Delay 2 minutes to warm up sensor
+  delay(20 * 1000); // Delay 20s to warm up sensor
 }
 
 void initMQ2ISR(uint8_t digitalPin)
@@ -67,8 +76,10 @@ void calibrateMQ2(bool debug)
     }
   }
 
+  hasCalibrated = true;
   if(debug)
   {
+    Serial.printf("MQ2 Calibrated: %s\n", hasCalibrated ? "TRUE" : "FALSe");
     Serial.printf("Analog value = %f\n", avgRead);
     Serial.printf("Rs / Ro = %.2f / %.2f = %.2f\n", rS_air, rO, rS_air / rO);
   }
@@ -92,7 +103,7 @@ void detectGas(bool debug)
   for(int i = 0; i < sampleSize; i++)
   {
     avgRead += analogRead(mq2Pin_A);
-    delay(200);     // 5 times per second
+    delay(50);     
   }
   avgRead /= sampleSize;
 
@@ -115,25 +126,45 @@ void detectGas(bool debug)
  
 void checkGasLevel(bool debug)
 {
-  if(gasResistanceRatio() < gasThreshold)
+  // If not ISR mode, check passive gas level
+  if(!gasDetected)
   {
-    gasDetected = true;
+    gasDetected = gasResistanceRatio() < gasThreshold;
   }
-  else
-  {
-    gasDetected = false;
-  }
-
-
-  /**********************WIP**********************/
-  if(gasDetected)
-  {
-    // Play alert and warning
-  }
-  /***********************************************/
+  
+  digitalWrite(yellowPin, gasDetected ? HIGH : LOW);
 
   if(debug)
   {
     Serial.printf("Gas detected: %s\n", gasDetected ? "TRUE" : "FALSE");
+  }
+}
+
+void monitorGas(int interval, bool debug)
+{
+  // ISR process
+  if(hasInterrupted)
+  {
+    if(debug) { Serial.println("MQ2 ISR Activated!"); }
+    if(getTick() - startTick >= 10)
+    {
+      startTick = getTick();
+      checkGasLevel(debug);
+    }
+
+    if(getTick() - isrTick >= 600)
+    {
+      gasDetected = false;
+      hasInterrupted = false;
+      isrTick = 0;
+      if(debug) { Serial.println("End of MQ2 ISR. Resuming normal operations ..."); }
+    }
+  }
+
+  // Check gas level passively every interval
+  if(getTick() - startTick >= interval && !hasInterrupted)
+  {
+    startTick = getTick();
+    detectGas(debug);
   }
 }
