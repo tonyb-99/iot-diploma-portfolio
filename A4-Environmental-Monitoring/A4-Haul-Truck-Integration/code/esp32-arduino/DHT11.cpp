@@ -35,6 +35,33 @@ float getHumidity(bool debug)
   return h;
 }
 
+void selectColour(float temp, bool debug)
+{
+  // Check dangers first before approaching safety
+  // Danger if below -10 or above 43 C
+  if(temp < (float)Temperature_Range::FREEZING || temp > (float)Temperature_Range::HOT)
+  {
+    if(debug) { Serial.println("Colour code: RED"); }
+    // currentColour = ColourCode::RED;
+    tempColour = ColourCode::RED;
+  }
+  // Warning if below 10 or above 37 C
+  else if(temp < (float)Temperature_Range::COLD || temp > (float)Temperature_Range::WARM)
+  {
+    if(debug) { Serial.println("Colour code: YELLOW"); }
+    // currentColour = ColourCode::YELLOW;
+    tempColour = ColourCode::YELLOW;
+  }
+
+  // Safe range: 11-36 C
+  else
+  {
+    if(debug) { Serial.println("Colour code: GREEN"); }
+    // currentColour = ColourCode::GREEN;
+    tempColour = ColourCode::GREEN;
+  }
+}
+
 void processDHT(bool humidityON, bool tempON, int interval, bool debug)
 {
   if(getTick() - startTick >= interval)
@@ -48,6 +75,7 @@ void processDHT(bool humidityON, bool tempON, int interval, bool debug)
     if(tempON)
     {
       float t = getTemperature(debug);
+      selectColour(t, debug);
     }
 
   }

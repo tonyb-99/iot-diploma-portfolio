@@ -4,11 +4,12 @@
 #ifndef MQ_2_H
 #define MQ_2_H
 
+#include "rgb.h"
 #include "custom_timer.h"
 #include <Arduino.h>
 
 void IRAM_ATTR gasISR();
-void initMQ2(uint8_t analogPin, uint8_t y_pin);
+void initMQ2(uint8_t analogPin);
 void initMQ2ISR(uint8_t digitalPin);
 void calibrateMQ2(bool debug = false);
 float gasResistanceRatio();

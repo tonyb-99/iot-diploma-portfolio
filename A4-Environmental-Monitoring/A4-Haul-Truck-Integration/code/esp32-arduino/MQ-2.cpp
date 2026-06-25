@@ -7,7 +7,6 @@
 namespace{
   uint8_t mq2Pin_A;
   uint8_t mq2Pin_D;
-  uint8_t yellowPin;
   float defaultRo = 5;
   float rS_air;
   float rS_gas;
@@ -25,15 +24,14 @@ void IRAM_ATTR gasISR()
 {
   gasDetected = true;
   hasInterrupted = true;
+  gasColour = ColourCode::RED;
   isrTick = getTick();
 }
 
-void initMQ2(uint8_t analogPin, uint8_t y_pin)
+void initMQ2(uint8_t analogPin)
 {
   mq2Pin_A = analogPin;
-  yellowPin = y_pin;
   pinMode(mq2Pin_A, INPUT);
-  pinMode(yellowPin, OUTPUT);
   Serial.println("Preparing MQ2 sensor (~ 20 seconds)");
   delay(20 * 1000); // Delay 20s to warm up sensor
 }
@@ -132,7 +130,7 @@ void checkGasLevel(bool debug)
     gasDetected = gasResistanceRatio() < gasThreshold;
   }
   
-  digitalWrite(yellowPin, gasDetected ? HIGH : LOW);
+  gasColour = gasDetected ? ColourCode::RED : ColourCode::GREEN;
 
   if(debug)
   {

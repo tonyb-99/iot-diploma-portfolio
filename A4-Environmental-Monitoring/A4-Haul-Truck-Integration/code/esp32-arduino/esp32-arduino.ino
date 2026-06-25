@@ -27,7 +27,6 @@
 #define REDPIN 15
 #define GREENPIN 16
 #define SPKRPIN 17
-#define YELLOWPIN 26
 
 const bool debug = true;
 const String fileName = "/vibration_data.csv";
@@ -37,7 +36,7 @@ void setup() {
   Serial.begin(9600);
   // initDisplay();
   initDHT11(DHTPIN);
-  initMQ2(MQ2PIN, YELLOWPIN);
+  initMQ2(MQ2PIN);
   initMQ2ISR(MQ2ISR);
   calibrateMQ2(true);
   // initRTC();

@@ -2,6 +2,16 @@
 
 RGB rgb;
 
+ColourCode tempColour = ColourCode::GREEN;
+ColourCode gasColour = ColourCode::GREEN;
+
+namespace{
+  unsigned long startTick = 0;
+  bool isRGB_ON = false;
+  int interval = 30;
+  ColourCode currentColour = ColourCode::NONE;
+}
+
 void initRGB(uint8_t r_pin, uint8_t g_pin, uint8_t b_pin)
 {
   rgb = {r_pin, g_pin, b_pin};
@@ -48,3 +58,88 @@ void yellowON(float intensity)
   analogWrite(rgb.r, brightness);
   analogWrite(rgb.g, brightness);
 }
+
+void getCurrentColour()
+{
+  if(gasColour == ColourCode::GREEN)
+  {
+    if(tempColour == ColourCode::YELLOW)
+    {
+      currentColour == ColourCode::YELLOW;
+    }
+    else if(tempColour == ColourCode::RED)
+    {
+      currentColour = ColourCode::RED;
+    }
+    else
+    {
+      currentColour == ColourCode::GREEN;
+    }
+  }
+  else
+  {
+    currentColour = ColourCode::RED;
+  }
+}
+
+void handleLED(bool debug)
+{ 
+  getCurrentColour();
+  interval = (int)currentColour;
+  if(debug) { Serial.printf("Interval: %i\n", interval); }
+  isRGB_ON = !isRGB_ON;
+  if(isRGB_ON)
+  {
+    switch(currentColour)
+    {
+      case ColourCode::RED:
+        redON();
+        if(debug) { Serial.println("LED Colour: RED"); }
+        break;
+
+      case ColourCode::YELLOW:
+        yellowON();
+        if(debug) { Serial.println("LED Colour: YELLOW"); }
+        break;
+
+      case ColourCode::GREEN:
+        greenON();
+        if(debug) { Serial.println("LED Colour: GREEN"); }
+        break;
+
+      default: return;
+    }
+  }
+  else
+  {
+    RGBOFF();
+  }
+}
+
+
+void RGBAlert(bool debug)
+{
+  if(getTick() - startTick >= interval)
+  {
+    startTick = getTick();
+    handleLED(debug);
+  } 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

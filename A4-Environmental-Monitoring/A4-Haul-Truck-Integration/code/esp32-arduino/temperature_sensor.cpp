@@ -4,9 +4,9 @@ namespace{
   unsigned long startTick = 0;
   uint8_t tempPin;
   float avgTemp = 0;
-  bool isRGB_ON = false;
-  int interval = 30;
-  ColourCode currentColour = ColourCode::NONE;
+  // bool isRGB_ON = false;
+  // int interval = 30;
+  // ColourCode currentColour = ColourCode::NONE;
 }
 
 void initThermistor(uint8_t thermistorPin)
@@ -59,77 +59,81 @@ void selectColour(bool debug)
 {
   // Check dangers first before approaching safety
   // Danger if below -10 or above 43 C
-  if(avgTemp < Conditions::FREEZING || avgTemp > Conditions::HOT)
+  if(avgTemp < (float)Temperature_Range::FREEZING || avgTemp > (float)Temperature_Range::HOT)
   {
     if(debug) { Serial.println("Colour code: RED"); }
-    currentColour = ColourCode::RED;
+    // currentColour = ColourCode::RED;
+    tempColour = ColourCode::RED;
   }
   // Warning if below 10 or above 37 C
-  else if(avgTemp < Conditions::COLD || avgTemp > Conditions::WARM)
+  else if(avgTemp < (float)Temperature_Range::COLD || avgTemp > (float)Temperature_Range::WARM)
   {
     if(debug) { Serial.println("Colour code: YELLOW"); }
-    currentColour = ColourCode::YELLOW;
+    // currentColour = ColourCode::YELLOW;
+    tempColour = ColourCode::YELLOW;
   }
 
   // Safe range: 11-36 C
   else
   {
     if(debug) { Serial.println("Colour code: GREEN"); }
-    currentColour = ColourCode::GREEN;
-  }
-  
-}
-
-ColourCode getCurrentColour()
-{
-  return currentColour;
-}
-
-void handleLED(bool debug)
-{ 
-  interval = (int)currentColour;
-  if(debug) { Serial.printf("Interval: %i\n", interval); }
-  isRGB_ON = !isRGB_ON;
-  if(isRGB_ON)
-  {
-    switch(currentColour)
-    {
-      case ColourCode::RED:
-        redON();
-        break;
-
-      case ColourCode::YELLOW:
-        yellowON();
-        break;
-
-      case ColourCode::GREEN:
-        greenON();
-        break;
-
-      default: return;
-    }
-  }
-  else
-  {
-    RGBOFF();
+    // currentColour = ColourCode::GREEN;
+    tempColour = ColourCode::GREEN;
   }
 }
 
+// ColourCode getCurrentColour()
+// {
+//   return currentColour;
+// }
 
-void temperatureAlert(bool debug)
+// void handleLED(bool debug)
+// { 
+//   interval = (int)currentColour;
+//   if(debug) { Serial.printf("Interval: %i\n", interval); }
+//   isRGB_ON = !isRGB_ON;
+//   if(isRGB_ON)
+//   {
+//     switch(currentColour)
+//     {
+//       case ColourCode::RED:
+//         redON();
+//         break;
+
+//       case ColourCode::YELLOW:
+//         yellowON();
+//         break;
+
+//       case ColourCode::GREEN:
+//         greenON();
+//         break;
+
+//       default: return;
+//     }
+//   }
+//   else
+//   {
+//     RGBOFF();
+//   }
+// }
+
+
+void temperatureAlert(int interval, bool debug)
 {
   // Determine the avg temperature and colour every 10 seconds (9 + ~1 second where 1 is from processing).
-  if(getTick() % 90 == 0)
+  // if(getTick() % 90 == 0)
+  if(getTick() - startTick >= interval)
   {
+    startTick = getTick();
     calcTemperature(debug);
     selectColour(debug);
   }
 
-  if(getTick() - startTick >= interval)
-  {
-    startTick = getTick();
-    handleLED(debug);
-  }
+  // if(getTick() - startTick >= interval)
+  // {
+  //   startTick = getTick();
+  //   handleLED(debug);
+  // }
   
 }
 
