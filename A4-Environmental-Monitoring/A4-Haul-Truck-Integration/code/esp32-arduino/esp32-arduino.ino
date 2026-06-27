@@ -80,9 +80,9 @@ void setup() {
 void loop() {
   initCustomTimer(debug);
   temperatureAlert(debug);
-  processDHT(true, true, 90, debug);
-  measureVibrations(LittleFS, debug);
-  monitorGas(100, debug);
+  processDHT(true, true, 100, debug);
+  monitorGas(110, debug);
+  measureVibrations(LittleFS, 150, debug);
   RGBAlert(debug);
 }
 

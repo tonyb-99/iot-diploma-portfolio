@@ -9,8 +9,9 @@ ColourCode vibrationColour = ColourCode::GREEN;
 namespace{
   unsigned long startTick = 0;
   bool isRGB_ON = false;
-  int interval = 30;
-  ColourCode currentColour = ColourCode::NONE;
+  // int interval = 30;
+  int interval = (int)ColourCode::GREEN;
+  ColourCode currentColour = ColourCode::GREEN;
 }
 
 void initRGB(uint8_t r_pin, uint8_t g_pin, uint8_t b_pin)
@@ -66,7 +67,7 @@ void getCurrentColour()
   {
     if(tempColour == ColourCode::YELLOW)
     {
-      currentColour == ColourCode::YELLOW;
+      currentColour = ColourCode::YELLOW;
     }
     else if(tempColour == ColourCode::RED)
     {
@@ -74,7 +75,7 @@ void getCurrentColour()
     }
     else
     {
-      currentColour == ColourCode::GREEN;
+      currentColour = ColourCode::GREEN;
     }
   }
   else
