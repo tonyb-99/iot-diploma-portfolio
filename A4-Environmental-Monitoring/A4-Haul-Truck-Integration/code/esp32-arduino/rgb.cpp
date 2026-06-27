@@ -4,6 +4,7 @@ RGB rgb;
 
 ColourCode tempColour = ColourCode::GREEN;
 ColourCode gasColour = ColourCode::GREEN;
+ColourCode vibrationColour = ColourCode::GREEN;
 
 namespace{
   unsigned long startTick = 0;
@@ -61,7 +62,7 @@ void yellowON(float intensity)
 
 void getCurrentColour()
 {
-  if(gasColour == ColourCode::GREEN)
+  if(gasColour == ColourCode::GREEN || vibrationColour == ColourCode::GREEN)
   {
     if(tempColour == ColourCode::YELLOW)
     {

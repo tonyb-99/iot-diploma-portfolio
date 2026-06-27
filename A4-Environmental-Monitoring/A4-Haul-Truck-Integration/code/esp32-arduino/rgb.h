@@ -21,6 +21,7 @@ struct RGB
 extern RGB rgb;
 extern ColourCode tempColour;
 extern ColourCode gasColour;
+extern ColourCode vibrationColour;
 
 void initRGB(uint8_t r_pin, uint8_t g_pin, uint8_t b_pin);
 void RGBOFF(bool debug = false);

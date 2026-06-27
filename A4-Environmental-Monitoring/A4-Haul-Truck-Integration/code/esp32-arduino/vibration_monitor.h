@@ -1,6 +1,7 @@
 #ifndef VIBRATION_MONITOR_H
 #define VIBRATION_MONTIOR_H
 
+#include "rgb.h"
 #include "clock.h"
 #include "custom_timer.h"
 #include "file_manager.h"

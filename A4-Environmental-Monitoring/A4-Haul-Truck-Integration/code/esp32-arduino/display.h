@@ -13,7 +13,11 @@
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C 
+#define MAX_ROWS 8
+#define MAX_CHAR 21
 
 void initDisplay();
-void displayText(String msg);
+void displayText(const String& msg);
+void displayOutput(String line);
+void addLine(const String& output);
 #endif

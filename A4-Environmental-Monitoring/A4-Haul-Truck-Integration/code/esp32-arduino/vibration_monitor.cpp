@@ -295,6 +295,7 @@ void measureVibrations(fs::FS &fs, int interval, bool debug)
   {
     Serial.println("Anomaly detected!");
     isAbnormal = true;
+    vibrationColour = ColourCode::RED;
     sensorUpdate(debug);
     appendFile(fs, pFileName->c_str(), exportString(debug).c_str());
     hasCalibrated = false;
@@ -306,6 +307,7 @@ void measureVibrations(fs::FS &fs, int interval, bool debug)
   {
     calibrateA(debug);
     hasCalibrated = true;
+    vibrationColour = ColourCode::GREEN;
   }
 
   isAbnormal = false;

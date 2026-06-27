@@ -35,58 +35,54 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   // initDisplay();
+  delay(50);
+
+  initRTC();
+  delay(50);
+
+  initLittleFS();
+  delay(50);
+
+  createDataFile(LittleFS, fileName, debug);
+  delay(50);
+
+  initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
+  delay(50);
+
+  initThermistor(THERMPIN);
+  delay(50);
+
   initDHT11(DHTPIN);
-  initMQ2(MQ2PIN);
-  initMQ2ISR(MQ2ISR);
-  calibrateMQ2(true);
-  // initRTC();
-  // initServo(SERVOPIN);
-  // initRGB(RGBRPIN, RGBGPIN, RGBBPIN);
-  // initThermistor(THERMPIN);
-  // Wire.begin(21, 22);
-  // Wire.setClock(100000);
-  // delay(200);
+  delay(50);  
 
+  initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
+  delay(50);
 
-  // initRTC();
-  // delay(200);
-  // initLittleFS();
-  // delay(100);
-  // createDataFile(LittleFS, fileName, debug);
-  // delay(200);
-  // initVibrationMonitor(MPU6050_RANGE_2_G, MPU6050_RANGE_250_DEG, MPU6050_BAND_260_HZ);    // High freq for fast readings, no smoothing.
-  // initVibrationInterrupt(MPU6050_HIGHPASS_5_HZ, 10);            // Picks fast moving vibrations
-  // delay(100);
+  initVibrationInterrupt(MPU6050_HIGHPASS_5_HZ, 10);            // Picks fast moving vibrations
+  delay(50);
+
   // initCardReader(SSPIN, RSTPIN, SPKRPIN, REDPIN, GREENPIN);
-  // delay(200);
+  // delay(50);
+
+  // initServo(SERVOPIN);
+  // delay(50);
+
+  initMQ2(MQ2PIN);
+  delay(50);
+
+  initMQ2ISR(MQ2ISR);
+  delay(50);
+
+  calibrateMQ2(true);
+  delay(50);
 }
 
 void loop() {
-
-
-  // displayText("Hello");
-
-  // delay(1000);
-  // displayText("World!");
-
-  // rotate(90, 15, true);
-  // delay(1000);
-  // rotate(180, 15, true);
-  // delay(1000);
-  // rotate(0, 15, true);
-  // delay(1000);
-
-  // initCustomTimer(debug);
-  // temperatureAlert(debug);
-
-  // initCustomTimer(debug);
-  // measureVibrations(LittleFS, debug);
-
-  // initCustomTimer(debug);
-  // cardReadProcess(debug);
-
   initCustomTimer(debug);
-  processDHT(true, true, 100, debug);
-  monitorGas(120, debug);
+  temperatureAlert(debug);
+  processDHT(true, true, 90, debug);
+  measureVibrations(LittleFS, debug);
+  monitorGas(100, debug);
+  RGBAlert(debug);
 }
 
